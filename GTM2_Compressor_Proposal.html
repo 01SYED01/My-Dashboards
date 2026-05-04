@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTM-2 | Compressor Replacement Proposal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#07111e;--dark:#0d1b2a;--panel:#111f30;--card:#172334;--card2:#1d2e42;
+  --border:#1e3352;--blue:#1a4b8c;--sky:#2979d4;--teal:#00b4d8;--cyan:#00d4ff;
+  --green:#00c47a;--red:#e03c3c;--amber:#f59e0b;--gold:#fbbf24;
+  --white:#ffffff;--muted:#5a7a9a;--light:#8fb0d0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Barlow',sans-serif;background:var(--navy);color:var(--white);overflow-x:hidden;line-height:1.5}
+
+/* COVER */
+.cover{min-height:100vh;background:linear-gradient(135deg,#07111e 0%,#0d2040 40%,#071828 100%);
+  position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:60px 32px;overflow:hidden}
+.cover::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(0,180,216,.08) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 20%,rgba(41,121,212,.07) 0%,transparent 50%);pointer-events:none}
+.cover-grid{position:absolute;inset:0;opacity:.04;
+  background-image:linear-gradient(var(--teal) 1px,transparent 1px),linear-gradient(90deg,var(--teal) 1px,transparent 1px);
+  background-size:60px 60px}
+.cover-tag{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:4px;
+  color:var(--teal);text-transform:uppercase;margin-bottom:24px;
+  border:1px solid rgba(0,180,216,.3);padding:6px 20px;border-radius:2px;display:inline-block}
+.cover h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(2.8rem,8vw,6rem);font-weight:900;
+  line-height:.95;letter-spacing:-1px;margin-bottom:8px}
+.cover h1 span{color:var(--teal)}
+.cover h2{font-family:'Barlow Condensed',sans-serif;font-size:clamp(1rem,3vw,1.6rem);font-weight:400;
+  color:var(--light);letter-spacing:3px;text-transform:uppercase;margin-bottom:40px}
+.cover-stats{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
+.cover-stat .val{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:800;color:var(--white)}
+.cover-stat .lbl{font-size:.7rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.cover-divider{width:60px;height:3px;background:linear-gradient(90deg,var(--teal),var(--sky));margin:0 auto 40px}
+.cover-by{font-size:.8rem;color:var(--muted);letter-spacing:.5px}
+.cover-by strong{color:var(--light)}
+.scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  font-size:.7rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:8px;animation:bounce 2s infinite}
+.scroll-hint::after{content:'';width:1px;height:32px;background:linear-gradient(var(--teal),transparent)}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(7,17,30,.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;height:52px}
+.nav-brand{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1rem;letter-spacing:2px;color:var(--teal)}
+.nav-links{display:flex;gap:0}
+.nav-link{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:1.5px;
+  color:var(--muted);text-transform:uppercase;padding:0 16px;height:52px;display:flex;align-items:center;
+  text-decoration:none;border-bottom:2px solid transparent;transition:all .2s;cursor:pointer}
+.nav-link:hover,.nav-link.active{color:var(--teal);border-bottom-color:var(--teal)}
+@media(max-width:700px){.nav-links{display:none}}
+
+/* SECTIONS */
+.section{padding:64px 32px;max-width:1300px;margin:0 auto}
+.sec-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;
+  letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:8px}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(1.8rem,4vw,2.8rem);
+  font-weight:800;line-height:1.05;margin-bottom:8px}
+.sec-title span{color:var(--teal)}
+.sec-sub{font-size:.9rem;color:var(--light);max-width:700px;margin-bottom:36px;line-height:1.7}
+.section-divider{border:none;border-top:1px solid var(--border);margin:0}
+
+/* CARDS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:1000px){.grid3{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px}
+.card.teal-card{background:linear-gradient(135deg,rgba(0,180,216,.08),var(--panel));border-color:rgba(0,180,216,.3)}
+.card.green-card{background:linear-gradient(135deg,rgba(0,196,122,.07),var(--panel));border-color:rgba(0,196,122,.3)}
+.card.red-card{background:linear-gradient(135deg,rgba(224,60,60,.07),var(--panel));border-color:rgba(224,60,60,.3)}
+.card.amber-card{background:linear-gradient(135deg,rgba(245,158,11,.07),var(--panel));border-color:rgba(245,158,11,.3)}
+.card-label{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.card-value{font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:800;line-height:1;margin-bottom:4px}
+.card-value.teal{color:var(--teal)}.card-value.green{color:var(--green)}
+.card-value.red{color:var(--red)}.card-value.amber{color:var(--amber)}
+.card-note{font-size:.75rem;color:var(--muted);line-height:1.5}
+
+/* NOTE BOX */
+.note-box{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);
+  border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:12px 16px;
+  font-size:.8rem;color:#c4a44a;line-height:1.6;margin-bottom:24px}
+.note-box strong{color:var(--amber)}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{background:var(--card2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;
+  font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:10px 14px;text-align:left;border-bottom:2px solid var(--border)}
+.data-table td{padding:10px 14px;font-size:.83rem;border-bottom:1px solid rgba(30,51,82,.5);vertical-align:middle}
+.data-table tr:hover td{background:rgba(255,255,255,.02)}
+.data-table .running{color:var(--green);font-weight:600}
+.data-table .off{color:var(--red)}
+.data-table .total-row td{background:rgba(0,180,216,.06);color:var(--teal);font-weight:700;
+  font-family:'Barlow Condensed',sans-serif;font-size:.95rem;border-top:2px solid rgba(0,180,216,.2)}
+
+/* STATUS BADGE */
+.badge{display:inline-block;padding:3px 10px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;
+  font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.badge-green{background:rgba(0,196,122,.15);color:var(--green);border:1px solid rgba(0,196,122,.3)}
+.badge-red{background:rgba(224,60,60,.12);color:var(--red);border:1px solid rgba(224,60,60,.3)}
+.badge-amber{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.badge-teal{background:rgba(0,180,216,.12);color:var(--teal);border:1px solid rgba(0,180,216,.3)}
+
+/* VENDOR BUTTONS */
+.vendor-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.vendor-btn{font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:2px;
+  padding:10px 28px;border-radius:6px;border:2px solid var(--border);background:var(--card);
+  color:var(--muted);cursor:pointer;transition:all .25s;text-transform:uppercase}
+.vendor-btn:hover{border-color:var(--teal);color:var(--teal)}
+.vendor-btn.active-kaeser{background:rgba(41,121,212,.15);border-color:var(--sky);color:#90c4ff}
+.vendor-btn.active-atlas{background:rgba(0,196,122,.12);border-color:var(--green);color:var(--green)}
+.vendor-btn.active-deman{background:rgba(245,158,11,.12);border-color:var(--amber);color:var(--amber)}
+.vendor-btn.active-all{background:rgba(0,180,216,.12);border-color:var(--teal);color:var(--teal)}
+
+/* VENDOR COMPARISON CARDS */
+.vendor-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:800px){.vendor-cards{grid-template-columns:1fr}}
+.vendor-card{background:var(--panel);border:2px solid var(--border);border-radius:12px;padding:20px;
+  transition:all .3s;display:none}
+.vendor-card.visible{display:block}
+.vendor-card.kaeser-card{border-color:rgba(41,121,212,.4);background:linear-gradient(135deg,rgba(41,121,212,.06),var(--panel))}
+.vendor-card.atlas-card{border-color:rgba(0,196,122,.4);background:linear-gradient(135deg,rgba(0,196,122,.06),var(--panel))}
+.vendor-card.deman-card{border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.06),var(--panel))}
+.vendor-name{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;
+  letter-spacing:2px;margin-bottom:4px;text-transform:uppercase}
+.vendor-origin{font-size:.72rem;color:var(--muted);margin-bottom:16px;letter-spacing:.5px}
+.vendor-row{display:flex;justify-content:space-between;padding:7px 0;
+  border-bottom:1px solid rgba(30,51,82,.5);font-size:.82rem}
+.vendor-row:last-child{border:none}
+.vendor-row .lbl{color:var(--muted)}.vendor-row .val{font-weight:600}
+
+/* EDITABLE */
+.editable{background:transparent;border:none;border-bottom:1px dashed rgba(245,158,11,.4);
+  padding:0 3px;color:var(--amber);font-weight:600;cursor:text;display:inline;
+  font-family:inherit;font-size:inherit;min-width:40px}
+.editable:focus{outline:none;border-bottom-color:var(--amber)}
+
+/* COST TABLE */
+.cost-table{width:100%;border-collapse:collapse;margin-bottom:20px}
+.cost-table th{background:var(--card2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;
+  font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:10px 16px;text-align:left;border-bottom:2px solid var(--border)}
+.cost-table td{padding:10px 16px;font-size:.84rem;border-bottom:1px solid rgba(30,51,82,.5);vertical-align:middle}
+.cost-table .subtotal-row td{background:rgba(0,180,216,.05);color:var(--teal);font-weight:600;
+  border-top:1px solid rgba(0,180,216,.2)}
+.cost-table .total-row td{background:rgba(0,196,122,.06);color:var(--green);font-weight:700;
+  font-family:'Barlow Condensed',sans-serif;font-size:1rem;border-top:2px solid rgba(0,196,122,.2)}
+
+/* PAYBACK BARS */
+.pb-bar-row{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.pb-bar-label{font-size:.78rem;color:var(--light);min-width:70px}
+.pb-bar-track{flex:1;background:rgba(255,255,255,.04);border-radius:4px;height:26px;overflow:hidden}
+.pb-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 12px;
+  font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.pb-bar-val{font-size:.8rem;font-weight:700;min-width:110px;text-align:right}
+
+/* CHART */
+.chart-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px}
+.chart-card h4{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;
+  letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:16px}
+
+/* RECOMMENDATION */
+.rec-hero{background:linear-gradient(135deg,rgba(0,196,122,.08),rgba(0,180,216,.06));
+  border:2px solid rgba(0,196,122,.25);border-radius:16px;padding:32px;margin-bottom:24px;text-align:center}
+.rec-hero h3{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--green);margin-bottom:8px}
+.rec-hero p{color:var(--light);font-size:.9rem;line-height:1.7;max-width:700px;margin:0 auto 20px}
+.rec-points{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;text-align:left}
+.rec-point{background:rgba(7,17,30,.5);border:1px solid var(--border);border-radius:10px;padding:16px}
+.rec-point .rp-num{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;
+  color:rgba(0,196,122,.2);line-height:1;margin-bottom:6px}
+.rec-point .rp-title{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;
+  color:var(--green);letter-spacing:1px;margin-bottom:4px}
+.rec-point .rp-desc{font-size:.78rem;color:var(--muted);line-height:1.5}
+
+/* SER BAR */
+.ser-bar-wrap{background:rgba(255,255,255,.06);border-radius:4px;height:18px;overflow:hidden;flex:1}
+.ser-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;
+  font-size:.68rem;font-weight:700;color:#fff}
+.ser-bar-fill.old{background:rgba(224,60,60,.65)}
+.ser-bar-fill.new-k{background:rgba(41,121,212,.8)}
+.ser-bar-fill.new-a{background:rgba(0,196,122,.8)}
+.ser-bar-fill.new-d{background:rgba(245,158,11,.8)}
+
+/* FREQ TABS */
+.freq-tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+.freq-tab{background:var(--card);border:1.5px solid var(--border);border-radius:6px;
+  padding:7px 18px;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;
+  letter-spacing:1px;cursor:pointer;transition:all .2s;color:var(--muted)}
+.freq-tab.active{background:var(--sky);border-color:var(--sky);color:var(--white)}
+.freq-tab:hover:not(.active){border-color:var(--teal);color:var(--teal)}
+
+/* SAVINGS HERO */
+.saving-big{background:linear-gradient(135deg,rgba(0,196,122,.1),var(--panel));
+  border:2px solid rgba(0,196,122,.3);border-radius:14px;padding:28px;text-align:center}
+.saving-big .amount{font-family:'Barlow Condensed',sans-serif;font-size:2.4rem;font-weight:900;color:var(--green);line-height:1}
+.saving-big .period{font-size:.72rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:6px}
+.saving-big .note{font-size:.75rem;color:var(--light);margin-top:8px;line-height:1.4}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.live{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+
+footer{background:var(--panel);border-top:1px solid var(--border);padding:20px 32px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+  font-size:.72rem;color:var(--muted)}
+footer strong{color:var(--teal)}
+.footer-stamp{background:var(--card2);border:1px solid var(--border);border-radius:6px;
+  padding:6px 16px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.8rem;color:var(--light)}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-tag">Capital Investment Proposal · GTM-2</div>
+  <h1>COMPRESSOR<br><span>REPLACEMENT</span></h1>
+  <h2>Compressed Air System Modernisation</h2>
+  <div class="cover-divider"></div>
+  <div class="cover-stats">
+    <div class="cover-stat"><div class="val">10</div><div class="lbl">Current Units</div></div>
+    <div class="cover-stat"><div class="val" style="color:var(--teal)">3</div><div class="lbl">Proposed Units</div></div>
+    <div class="cover-stat"><div class="val" style="color:var(--red)">600 kW</div><div class="lbl">Running Load</div></div>
+    <div class="cover-stat"><div class="val" style="color:var(--green)">396 kW</div><div class="lbl">Proposed Load</div></div>
+    <div class="cover-stat"><div class="val" style="color:var(--amber)">34%</div><div class="lbl">Energy Reduction</div></div>
+  </div>
+  <div class="cover-by">
+    Prepared by: <strong>Javed Ali</strong> · Deputy Manager Maintenance & Air Compressor<br>
+    <span style="color:var(--muted);font-size:.75rem">Gul Ahmed Textile Mills Ltd – GTM-2 · May 2026</span>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">GTM-2 · Compressor</div>
+  <div class="nav-links">
+    <a class="nav-link" onclick="scrollSec('current')">Current Fleet</a>
+    <a class="nav-link" onclick="scrollSec('vendors')">Vendor Comparison</a>
+    <a class="nav-link" onclick="scrollSec('investment')">Investment</a>
+    <a class="nav-link" onclick="scrollSec('savings')">Savings</a>
+    <a class="nav-link" onclick="scrollSec('payback')">Payback</a>
+    <a class="nav-link" onclick="scrollSec('recommendation')">Recommendation</a>
+  </div>
+</nav>
+
+<!-- ══════════════ 1. CURRENT FLEET ══════════════ -->
+<div class="section" id="current">
+  <div class="sec-eyebrow">01 · Current Situation</div>
+  <div class="sec-title">Existing Fleet — <span>End of Life</span></div>
+  <div class="sec-sub">GTM-2 currently operates 10 compressors in a demand-based rotation. With 1,20,000–1,70,000 running hours logged — far exceeding the industry design life of 80,000–100,000 hours — the fleet is operating on borrowed time.</div>
+
+  <div class="grid4" style="margin-bottom:32px">
+    <div class="card red-card">
+      <div class="card-label">Total Units</div>
+      <div class="card-value red">10</div>
+      <div class="card-note">7 running · 3 on standby/off</div>
+    </div>
+    <div class="card red-card">
+      <div class="card-label">Running Load</div>
+      <div class="card-value red">600 kW</div>
+      <div class="card-note">Demand-rotation across fleet</div>
+    </div>
+    <div class="card amber-card">
+      <div class="card-label">Running Flow</div>
+      <div class="card-value amber">74.1 m³/min</div>
+      <div class="card-note">Total compressed air output</div>
+    </div>
+    <div class="card red-card">
+      <div class="card-label">Running Hours</div>
+      <div class="card-value red">170K+</div>
+      <div class="card-note">Design life: 80–100K hrs — <strong style="color:var(--red)">EXCEEDED</strong></div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>⚠️ Critical Risk:</strong> These compressors have operated at 1.7× to 2.1× their rated design life. Continued operation increases the probability of catastrophic failure, unplanned downtime, and exponentially rising maintenance costs.
+  </div>
+
+  <div class="card" style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Make</th>
+          <th>Model</th>
+          <th>Year</th>
+          <th>Age</th>
+          <th>Motor kW</th>
+          <th>Flow (m³/min)</th>
+          <th>SER</th>
+          <th>Pressure (bar)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Worthington</td><td>RLR 125</td><td>2011</td><td>14 yrs</td><td>90</td><td>9.5</td><td>9.47</td><td>10</td><td><span class="badge badge-green">Running</span></td></tr>
+        <tr><td>2</td><td>Worthington</td><td>RLR 125</td><td>2011</td><td>14 yrs</td><td>90</td><td>10.4</td><td>8.65</td><td>10</td><td><span class="badge badge-green">Running</span></td></tr>
+        <tr><td>3</td><td>Atlas Copco</td><td>GA 90 FSD</td><td>2022</td><td>3 yrs</td><td>90</td><td>10.8</td><td>8.33</td><td>10</td><td><span class="badge badge-green">Running</span></td></tr>
+        <tr><td>4</td><td>Worthington</td><td>RLR 100</td><td>2006</td><td>19 yrs</td><td>75</td><td>7.4</td><td>10.14</td><td>9.5</td><td><span class="badge badge-green">Running</span></td></tr>
+        <tr><td>5</td><td>Atlas Copco</td><td>GA 90 FSD</td><td>2019</td><td>6 yrs</td><td>90</td><td>14.1</td><td>6.38</td><td>10</td><td><span class="badge badge-green">Running</span></td></tr>
+        <tr><td>6</td><td>Worthington</td><td>100 E</td><td>2011</td><td>14 yrs</td><td>75</td><td>8.3</td><td>9.04</td><td>10</td><td><span class="badge badge-green">Running</span></td></tr>
+        <tr><td>7</td><td>Atlas Copco</td><td>GA 90 FSD</td><td>2024</td><td>1 yr</td><td>90</td><td>13.6</td><td>6.62</td><td>10</td><td><span class="badge badge-green">Running</span></td></tr>
+        <tr><td>8</td><td>Worthington</td><td>—</td><td>—</td><td>—</td><td>—</td><td>12.30</td><td>—</td><td>—</td><td><span class="badge badge-red">OFF</span></td></tr>
+        <tr><td>9</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>6.12</td><td>—</td><td>—</td><td><span class="badge badge-red">OFF</span></td></tr>
+        <tr><td>10</td><td>Worthington</td><td>—</td><td>—</td><td>—</td><td>—</td><td>6.47</td><td>—</td><td>—</td><td><span class="badge badge-red">OFF</span></td></tr>
+        <tr class="total-row">
+          <td colspan="5">TOTALS / AVERAGES</td>
+          <td>600 kW</td>
+          <td>74.1 m³/min</td>
+          <td>8.1 avg</td>
+          <td>10 bar</td>
+          <td>7 Running</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid2" style="margin-top:24px">
+    <div class="card red-card">
+      <div class="card-label">Annual Maintenance Cost — Current Fleet</div>
+      <div class="card-value red" style="font-size:1.8rem">Rs. 12.5M / year</div>
+      <div class="card-note">Reactive maintenance across 10 aging units · Rising year-on-year as fleet degrades</div>
+    </div>
+    <div class="card amber-card">
+      <div class="card-label">Annual Energy Cost — Current Fleet</div>
+      <div class="card-value amber" style="font-size:1.8rem" id="cur-energy-cost">—</div>
+      <div class="card-note">600 kW · 24/7 · 365 days · PKR <span class="editable" contenteditable="true" id="rate-input" oninput="recalcAll()">42</span>/kWh</div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══════════════ 2. VENDOR COMPARISON ══════════════ -->
+<div class="section" id="vendors">
+  <div class="sec-eyebrow">02 · Vendor Comparison</div>
+  <div class="sec-title">New VSD Fleet — <span>3 Options</span></div>
+  <div class="sec-sub">Three international vendors evaluated for a 3-unit replacement fleet (1 VSD + 2 Fixed compressors, 132 kW each). All feature Variable Speed Drive technology for auto load-matching — eliminating wasteful load/unload cycling.</div>
+
+  <div class="vendor-btns">
+    <button class="vendor-btn active-kaeser" id="btn-kaeser" onclick="setVendor('kaeser')">KAESER</button>
+    <button class="vendor-btn" id="btn-atlas" onclick="setVendor('atlas')">Atlas Copco</button>
+    <button class="vendor-btn" id="btn-deman" onclick="setVendor('deman')">DEMAN</button>
+    <button class="vendor-btn" id="btn-all" onclick="setVendor('all')">Compare All</button>
+  </div>
+
+  <div class="vendor-cards" id="vendor-cards-wrap">
+    <!-- KAESER -->
+    <div class="vendor-card kaeser-card visible" id="vc-kaeser">
+      <div class="vendor-name" style="color:#90c4ff">KAESER</div>
+      <div class="vendor-origin">Germany · Premium Industrial</div>
+      <div class="vendor-row"><span class="lbl">Configuration</span><span class="val">1 VSD + 2 Fixed · 132 kW each</span></div>
+      <div class="vendor-row"><span class="lbl">Running kW</span><span class="val" style="color:var(--sky)">396 kW</span></div>
+      <div class="vendor-row"><span class="lbl">Total Flow</span><span class="val" style="color:var(--sky)">81.51 m³/min</span></div>
+      <div class="vendor-row"><span class="lbl">SER</span><span class="val" style="color:var(--sky)">4.86 kW/m³/min</span></div>
+      <div class="vendor-row"><span class="lbl">VSD Unit Cost</span><span class="val">€ <span class="editable" contenteditable="true" id="k-vsd" oninput="recalcAll()">72,800</span></span></div>
+      <div class="vendor-row"><span class="lbl">2× Fixed Cost</span><span class="val">€ <span class="editable" contenteditable="true" id="k-fix" oninput="recalcAll()">145,900</span></span></div>
+      <div class="vendor-row"><span class="lbl">Tax (18%)</span><span class="val" id="k-tax">—</span></div>
+      <div class="vendor-row"><span class="lbl">Total incl. Tax</span><span class="val" style="color:#90c4ff" id="k-total">—</span></div>
+      <div class="vendor-row"><span class="lbl">Total in PKR</span><span class="val" style="color:#90c4ff" id="k-pkr">—</span></div>
+      <div class="vendor-row"><span class="lbl">Warranty</span><span class="val">As per vendor T&C</span></div>
+    </div>
+
+    <!-- ATLAS COPCO -->
+    <div class="vendor-card atlas-card" id="vc-atlas">
+      <div class="vendor-name" style="color:var(--green)">Atlas Copco</div>
+      <div class="vendor-origin">Belgium · Global OEM</div>
+      <div class="vendor-row"><span class="lbl">Configuration</span><span class="val">1 VSD + 2 Fixed · 132 kW each</span></div>
+      <div class="vendor-row"><span class="lbl">Running kW</span><span class="val" style="color:var(--green)">396 kW</span></div>
+      <div class="vendor-row"><span class="lbl">Total Flow</span><span class="val" style="color:var(--green)">76.86 m³/min</span></div>
+      <div class="vendor-row"><span class="lbl">SER</span><span class="val" style="color:var(--green)">5.15 kW/m³/min</span></div>
+      <div class="vendor-row"><span class="lbl">VSD Unit Cost</span><span class="val">$ <span class="editable" contenteditable="true" id="a-vsd" oninput="recalcAll()">91,574</span></span></div>
+      <div class="vendor-row"><span class="lbl">2× Fixed Cost</span><span class="val">$ <span class="editable" contenteditable="true" id="a-fix" oninput="recalcAll()">137,389</span></span></div>
+      <div class="vendor-row"><span class="lbl">Tax (18%)</span><span class="val" id="a-tax">—</span></div>
+      <div class="vendor-row"><span class="lbl">Total incl. Tax</span><span class="val" style="color:var(--green)" id="a-total">—</span></div>
+      <div class="vendor-row"><span class="lbl">Total in PKR</span><span class="val" style="color:var(--green)" id="a-pkr">—</span></div>
+      <div class="vendor-row"><span class="lbl">Warranty</span><span class="val">As per vendor T&C</span></div>
+    </div>
+
+    <!-- DEMAN -->
+    <div class="vendor-card deman-card" id="vc-deman">
+      <div class="vendor-name" style="color:var(--amber)">DEMAN</div>
+      <div class="vendor-origin">China · Cost-Effective VSD</div>
+      <div class="vendor-row"><span class="lbl">Configuration</span><span class="val">1 VSD + 2 Fixed · 132 kW each</span></div>
+      <div class="vendor-row"><span class="lbl">Running kW</span><span class="val" style="color:var(--amber)">396 kW</span></div>
+      <div class="vendor-row"><span class="lbl">Total Flow</span><span class="val" style="color:var(--amber)">80.01 m³/min</span></div>
+      <div class="vendor-row"><span class="lbl">SER</span><span class="val" style="color:var(--amber)">4.95 kW/m³/min</span></div>
+      <div class="vendor-row"><span class="lbl">VSD Unit Cost</span><span class="val">$ <span class="editable" contenteditable="true" id="d-vsd" oninput="recalcAll()">65,000</span></span></div>
+      <div class="vendor-row"><span class="lbl">2× Fixed Cost</span><span class="val">$ <span class="editable" contenteditable="true" id="d-fix" oninput="recalcAll()">90,000</span></span></div>
+      <div class="vendor-row"><span class="lbl">Tax (18%)</span><span class="val" id="d-tax">—</span></div>
+      <div class="vendor-row"><span class="lbl">Total incl. Tax</span><span class="val" style="color:var(--amber)" id="d-total">—</span></div>
+      <div class="vendor-row"><span class="lbl">Total in PKR</span><span class="val" style="color:var(--amber)" id="d-pkr">—</span></div>
+      <div class="vendor-row"><span class="lbl">Warranty</span><span class="val">As per vendor T&C</span></div>
+    </div>
+  </div>
+
+  <!-- SER Comparison -->
+  <div class="chart-card">
+    <h4>S.E.R. Comparison — Specific Energy Ratio (kW per m³/min) · Lower = Better</h4>
+    <div style="margin-top:8px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <span style="font-size:.75rem;color:var(--muted);min-width:160px">Current Fleet (avg)</span>
+        <div class="ser-bar-wrap"><div class="ser-bar-fill old" style="width:100%">8.10</div></div>
+        <span style="font-size:.8rem;color:var(--red);min-width:50px;font-weight:700">8.10</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px" id="ser-kaeser-row">
+        <span style="font-size:.75rem;color:var(--muted);min-width:160px">KAESER (proposed)</span>
+        <div class="ser-bar-wrap"><div class="ser-bar-fill new-k" style="width:59.9%">4.86</div></div>
+        <span style="font-size:.8rem;color:#90c4ff;min-width:50px;font-weight:700">4.86</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px" id="ser-atlas-row">
+        <span style="font-size:.75rem;color:var(--muted);min-width:160px">Atlas Copco (proposed)</span>
+        <div class="ser-bar-wrap"><div class="ser-bar-fill new-a" style="width:63.6%">5.15</div></div>
+        <span style="font-size:.8rem;color:var(--green);min-width:50px;font-weight:700">5.15</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px" id="ser-deman-row">
+        <span style="font-size:.75rem;color:var(--muted);min-width:160px">DEMAN (proposed)</span>
+        <div class="ser-bar-wrap"><div class="ser-bar-fill new-d" style="width:61.1%">4.95</div></div>
+        <span style="font-size:.8rem;color:var(--amber);min-width:50px;font-weight:700">4.95</span>
+      </div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);margin-top:14px">
+      All proposed vendors deliver <strong style="color:var(--green)">40%+ SER improvement</strong> vs current fleet average of 8.10
+    </div>
+  </div>
+
+  <!-- Vendor chart -->
+  <div class="chart-card">
+    <h4>Investment Cost Comparison (PKR Million incl. 18% Tax)</h4>
+    <div style="position:relative;height:260px"><canvas id="chartVendor"></canvas></div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══════════════ 3. INVESTMENT ══════════════ -->
+<div class="section" id="investment">
+  <div class="sec-eyebrow">03 · Capital Investment</div>
+  <div class="sec-title">CAPEX <span>Breakdown</span></div>
+  <div class="sec-sub">Full investment cost per vendor including 18% tax. All quotation values are editable — update to reflect final negotiated prices. PKR conversion at USD 278 · EUR 310.</div>
+
+  <div class="note-box">
+    <strong>📝 Note:</strong> Values highlighted in <span style="color:var(--amber)">amber</span> are editable placeholders. Click any value to update it — all totals recalculate automatically.
+  </div>
+
+  <div class="card" style="overflow-x:auto;margin-bottom:20px">
+    <table class="cost-table">
+      <thead>
+        <tr>
+          <th>Vendor</th>
+          <th>VSD Unit (1×)</th>
+          <th>Fixed Units (2×)</th>
+          <th>Subtotal</th>
+          <th>18% Tax</th>
+          <th>Total (Foreign)</th>
+          <th>Total (PKR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:#90c4ff">KAESER</strong><br><span style="font-size:.72rem;color:var(--muted)">EUR @ 310</span></td>
+          <td>€ <span class="editable" contenteditable="true" oninput="syncAndRecalc('k-vsd',this)">72,800</span></td>
+          <td>€ <span class="editable" contenteditable="true" oninput="syncAndRecalc('k-fix',this)">145,900</span></td>
+          <td id="k-sub2">—</td>
+          <td id="k-tax2">—</td>
+          <td id="k-total2">—</td>
+          <td id="k-pkr2">—</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--green)">Atlas Copco</strong><br><span style="font-size:.72rem;color:var(--muted)">USD @ 278</span></td>
+          <td>$ <span class="editable" contenteditable="true" oninput="syncAndRecalc('a-vsd',this)">91,574</span></td>
+          <td>$ <span class="editable" contenteditable="true" oninput="syncAndRecalc('a-fix',this)">137,389</span></td>
+          <td id="a-sub2">—</td>
+          <td id="a-tax2">—</td>
+          <td id="a-total2">—</td>
+          <td id="a-pkr2">—</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--amber)">DEMAN</strong><br><span style="font-size:.72rem;color:var(--muted)">USD @ 278</span></td>
+          <td>$ <span class="editable" contenteditable="true" oninput="syncAndRecalc('d-vsd',this)">65,000</span></td>
+          <td>$ <span class="editable" contenteditable="true" oninput="syncAndRecalc('d-fix',this)">90,000</span></td>
+          <td id="d-sub2">—</td>
+          <td id="d-tax2">—</td>
+          <td id="d-total2">—</td>
+          <td id="d-pkr2">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid3">
+    <div class="card" style="border-color:rgba(41,121,212,.3);background:linear-gradient(135deg,rgba(41,121,212,.06),var(--panel))">
+      <div class="card-label">KAESER Total (PKR)</div>
+      <div class="card-value" style="color:#90c4ff;font-size:1.6rem" id="k-pkr-card">—</div>
+      <div class="card-note">incl. 18% tax · EUR 310 rate</div>
+    </div>
+    <div class="card green-card">
+      <div class="card-label">Atlas Copco Total (PKR)</div>
+      <div class="card-value green" style="font-size:1.6rem" id="a-pkr-card">—</div>
+      <div class="card-note">incl. 18% tax · USD 278 rate</div>
+    </div>
+    <div class="card amber-card">
+      <div class="card-label">DEMAN Total (PKR)</div>
+      <div class="card-value amber" style="font-size:1.6rem" id="d-pkr-card">—</div>
+      <div class="card-note">incl. 18% tax · USD 278 rate</div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══════════════ 4. SAVINGS ══════════════ -->
+<div class="section" id="savings">
+  <div class="sec-eyebrow">04 · Energy & Maintenance Savings</div>
+  <div class="sec-title">Running Cost <span>Comparison</span></div>
+  <div class="sec-sub">Current 600 kW fleet vs proposed 396 kW VSD fleet. Operating 24/7, 365 days. Maintenance saving: Rs. 12.5M (current) → Rs. 6M (new fleet, post warranty year).</div>
+
+  <div class="freq-tabs">
+    <span style="font-size:.8rem;color:var(--muted);line-height:2.2">View savings per:</span>
+    <div class="freq-tab active" onclick="setFreq('hour',this)">Hourly</div>
+    <div class="freq-tab" onclick="setFreq('day',this)">Daily</div>
+    <div class="freq-tab" onclick="setFreq('month',this)">Monthly</div>
+    <div class="freq-tab" onclick="setFreq('year',this)">Yearly</div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:24px">
+    <div class="saving-big" style="background:linear-gradient(135deg,rgba(224,60,60,.1),var(--panel));border-color:rgba(224,60,60,.3)">
+      <div class="amount" style="color:var(--red)" id="sv-old">—</div>
+      <div class="period">Current Fleet Energy Cost</div>
+      <div class="note" id="sv-old-note">600 kW · 10 units</div>
+    </div>
+    <div class="saving-big" style="background:linear-gradient(135deg,rgba(41,121,212,.1),var(--panel));border-color:rgba(41,121,212,.3)">
+      <div class="amount" style="color:var(--teal)" id="sv-new">—</div>
+      <div class="period">Proposed Fleet Energy Cost</div>
+      <div class="note" id="sv-new-note">396 kW · 3 VSD units</div>
+    </div>
+    <div class="saving-big">
+      <div class="amount" id="sv-save">—</div>
+      <div class="period"><span class="live"></span>Net Energy Saving</div>
+      <div class="note" id="sv-pct">vs current fleet</div>
+    </div>
+  </div>
+
+  <!-- Maintenance saving -->
+  <div class="card green-card" style="margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+      <div>
+        <div class="card-label">Additional Maintenance Saving</div>
+        <div class="card-value green" style="font-size:1.8rem">Rs. 6.5M / year</div>
+        <div class="card-note">Current: Rs. 12.5M → New: Rs. 6M (3 units · 1yr warranty · planned maintenance)</div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-label">Combined Annual Saving (Energy + Maintenance)</div>
+        <div class="card-value green" style="font-size:2rem" id="sv-combined">—</div>
+        <div class="card-note" id="sv-combined-note">at PKR 42/kWh · yearly</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="chart-card">
+      <h4>Energy Cost — Old vs New (PKR)</h4>
+      <div style="position:relative;height:240px"><canvas id="chartSavings"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>12-Month Cost Projection (PKR)</h4>
+      <div style="position:relative;height:240px"><canvas id="chartLine"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══════════════ 5. PAYBACK ══════════════ -->
+<div class="section" id="payback">
+  <div class="sec-eyebrow">05 · Return on Investment</div>
+  <div class="sec-title">Payback Period — <span>Per Vendor</span></div>
+  <div class="sec-sub">Payback calculated on total combined savings (energy + maintenance) vs total CAPEX including 18% tax. Select a vendor to see their specific ROI timeline.</div>
+
+  <div class="vendor-btns" style="margin-bottom:20px">
+    <button class="vendor-btn active-kaeser" id="pb-btn-kaeser" onclick="setPaybackVendor('kaeser')">KAESER</button>
+    <button class="vendor-btn" id="pb-btn-atlas" onclick="setPaybackVendor('atlas')">Atlas Copco</button>
+    <button class="vendor-btn" id="pb-btn-deman" onclick="setPaybackVendor('deman')">DEMAN</button>
+  </div>
+
+  <div class="grid3" style="margin-bottom:28px">
+    <div class="card green-card">
+      <div class="card-label">Payback Period</div>
+      <div class="card-value green" id="pb-months">—</div>
+      <div class="card-note" id="pb-vendor-label">Full CAPEX recovery from savings</div>
+    </div>
+    <div class="card teal-card">
+      <div class="card-label">3-Year Net Saving</div>
+      <div class="card-value teal" id="roi-3yr">—</div>
+      <div class="card-note">After CAPEX recovery</div>
+    </div>
+    <div class="card amber-card">
+      <div class="card-label">5-Year Net Saving</div>
+      <div class="card-value amber" id="roi-5yr">—</div>
+      <div class="card-note">Long-term benefit</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:24px;margin-bottom:20px">
+    <h4 style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:20px">Cumulative Net Position (Year by Year)</h4>
+    <div id="pb-bars"></div>
+  </div>
+
+  <div class="chart-card">
+    <h4>5-Year ROI — All Vendors (Rs. Million Cumulative Net)</h4>
+    <div style="position:relative;height:270px"><canvas id="chartROI"></canvas></div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══════════════ 6. RECOMMENDATION ══════════════ -->
+<div class="section" id="recommendation">
+  <div class="sec-eyebrow">06 · Executive Recommendation</div>
+  <div class="sec-title">Management <span>Summary</span></div>
+  <div class="sec-sub">Recommendation to senior management for approval of Compressor Replacement Programme — GTM-2.</div>
+
+  <div class="rec-hero">
+    <h3>✅ RECOMMENDED FOR APPROVAL</h3>
+    <p>The GTM-2 compressed air fleet has exceeded its rated design life by 70–113%. Continued operation presents significant risk of unplanned downtime, escalating maintenance costs, and production impact. Replacement with a 3-unit modern VSD fleet delivers immediate energy savings, dramatic SER improvement, and full investment payback within months — not years.</p>
+    <div class="rec-points">
+      <div class="rec-point">
+        <div class="rp-num">01</div>
+        <div class="rp-title">End-of-Life Fleet</div>
+        <div class="rp-desc">Current units at 1.2–1.7× design life. Risk of catastrophic failure is high and rising.</div>
+      </div>
+      <div class="rec-point">
+        <div class="rp-num">02</div>
+        <div class="rp-title">40% Energy Saving</div>
+        <div class="rp-desc">600 kW → 396 kW. VSD auto-matches demand — no wasteful load/unload cycling.</div>
+      </div>
+      <div class="rec-point">
+        <div class="rp-num">03</div>
+        <div class="rp-title">Rs. 6.5M Maintenance</div>
+        <div class="rp-desc">Maintenance halved from Rs. 12.5M to Rs. 6M per year. 1-year warranty on new fleet.</div>
+      </div>
+      <div class="rec-point">
+        <div class="rp-num">04</div>
+        <div class="rp-title">Fast Payback</div>
+        <div class="rp-desc">Combined energy + maintenance savings deliver full CAPEX recovery in months.</div>
+      </div>
+      <div class="rec-point">
+        <div class="rp-num">05</div>
+        <div class="rp-title">VSD Intelligence</div>
+        <div class="rp-desc">Variable Speed Drive auto-regulates output to match demand — eliminating idle energy waste.</div>
+      </div>
+      <div class="rec-point">
+        <div class="rp-num">06</div>
+        <div class="rp-title">10 → 3 Units</div>
+        <div class="rp-desc">Simplified fleet reduces spares inventory, service complexity, and operator workload by 70%.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label" style="margin-bottom:14px">Next Steps</div>
+      <div style="font-size:.85rem;color:var(--light);line-height:2.4">
+        <div>1. ✅ Finalise vendor selection from 3 options presented</div>
+        <div>2. ✅ Negotiate final pricing — update placeholders in proposal</div>
+        <div>3. ✅ Obtain CEO / Finance approval for CAPEX</div>
+        <div>4. ✅ Issue Purchase Order to selected vendor</div>
+        <div>5. ✅ Plan parallel commissioning — no production stoppage</div>
+        <div>6. ✅ Phase out old fleet progressively — starting oldest units</div>
+      </div>
+    </div>
+    <div class="card green-card">
+      <div class="card-label" style="margin-bottom:14px">Financial Summary</div>
+      <div id="fin-summary" style="font-size:.85rem;color:var(--light);line-height:2.4">
+        <div>Energy Saving/yr: <strong style="color:var(--green)" id="rec-e-save">—</strong></div>
+        <div>Maintenance Saving/yr: <strong style="color:var(--green)">Rs. 6.5M</strong></div>
+        <div>Combined Saving/yr: <strong style="color:var(--green)" id="rec-combined">—</strong></div>
+        <div>KAESER Payback: <strong style="color:#90c4ff" id="rec-k-pb">—</strong></div>
+        <div>Atlas Copco Payback: <strong style="color:var(--green)" id="rec-a-pb">—</strong></div>
+        <div>DEMAN Payback: <strong style="color:var(--amber)" id="rec-d-pb">—</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div><strong>Gul Ahmed Textile Mills Ltd – GTM-2</strong> · Compressed Air System Modernisation</div>
+  <div>Prepared by: <strong>Javed Ali</strong> · Deputy Manager Maintenance & Air Compressor · May 2026</div>
+  <div class="footer-stamp">CAPITAL INVESTMENT PROPOSAL · CONFIDENTIAL</div>
+</footer>
+
+<script>
+const EUR = 310, USD = 278, TAX = 0.18;
+const CUR_KW = 600, NEW_KW = 396;
+const HRS = 8760;
+const MAINT_OLD = 12500000, MAINT_NEW = 6000000;
+let freqMult = 1, freqLabel = 'per hour';
+let pbVendor = 'kaeser';
+let activeVendor = 'kaeser';
+
+const GC = 'rgba(30,51,82,.5)', TC = '#5a7a9a';
+const baseOpts = (yfmt) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:TC,font:{family:'Barlow Condensed',size:11}}}},
+  scales:{
+    x:{ticks:{color:TC,font:{family:'Barlow Condensed'}},grid:{color:GC}},
+    y:{ticks:{color:TC,font:{family:'Barlow Condensed'},callback:yfmt},grid:{color:GC}}
+  }
+});
+
+function getRate(){return parseFloat((document.getElementById('rate-input').innerText||'42').replace(/,/g,''))||42}
+function getVal(id){return parseFloat((document.getElementById(id).innerText||'0').replace(/,/g,'').replace(/[^0-9.]/g,''))||0}
+
+function fmtPKR(n){
+  if(n>=1e7) return 'Rs. '+(n/1e7).toFixed(2)+' Cr';
+  if(n>=1e5) return 'Rs. '+(n/1e5).toFixed(1)+' L';
+  return 'Rs. '+Math.round(n).toLocaleString();
+}
+function fmtM(n){return 'Rs. '+(n/1e6).toFixed(2)+'M'}
+function fmtShort(n){
+  if(n>=1e7) return 'Rs.'+(n/1e7).toFixed(1)+'Cr';
+  return 'Rs.'+(n/1e5).toFixed(1)+'L';
+}
+
+function vendorCosts(){
+  const kVsd = getVal('k-vsd'), kFix = getVal('k-fix');
+  const aVsd = getVal('a-vsd'), aFix = getVal('a-fix');
+  const dVsd = getVal('d-vsd'), dFix = getVal('d-fix');
+  const kBase = (kVsd+kFix)*EUR, aBase = (aVsd+aFix)*USD, dBase = (dVsd+dFix)*USD;
+  return {
+    k:{base:kBase, tax:kBase*TAX, total:kBase*(1+TAX)},
+    a:{base:aBase, tax:aBase*TAX, total:aBase*(1+TAX)},
+    d:{base:dBase, tax:dBase*TAX, total:dBase*(1+TAX)},
+  };
+}
+
+function set(id,v){const el=document.getElementById(id);if(el)el.textContent=v}
+
+function recalcAll(){
+  const rate = getRate();
+  const vc = vendorCosts();
+
+  // Current energy cost
+  const curCostHr = CUR_KW*rate;
+  const curCostYr = curCostHr*HRS;
+  set('cur-energy-cost', fmtPKR(curCostYr));
+
+  // Vendor cards
+  ['k','a','d'].forEach(v=>{
+    const c = vc[v];
+    const cur = v==='k'?'EUR':'USD';
+    const base = v==='k'? (getVal('k-vsd')+getVal('k-fix')) : v==='a'? (getVal('a-vsd')+getVal('a-fix')) : (getVal('d-vsd')+getVal('d-fix'));
+    set(v+'-tax', cur+' '+Math.round(base*TAX).toLocaleString());
+    set(v+'-total', cur+' '+Math.round(base*(1+TAX)).toLocaleString());
+    set(v+'-pkr', fmtPKR(c.total));
+
+    // Investment table
+    const rate2 = v==='k'?EUR:USD;
+    set(v+'-sub2', cur+' '+Math.round(base).toLocaleString());
+    set(v+'-tax2', cur+' '+Math.round(base*TAX).toLocaleString());
+    set(v+'-total2', cur+' '+Math.round(base*(1+TAX)).toLocaleString());
+    set(v+'-pkr2', fmtPKR(c.total));
+    set(v+'-pkr-card', fmtPKR(c.total));
+    set(v+'-pkr2', fmtPKR(c.total));
+  });
+
+  // Savings
+  const newCostHr = NEW_KW*rate;
+  const saveHr = (CUR_KW-NEW_KW)*rate;
+  const saveYr = saveHr*HRS;
+  const combinedYr = saveYr + (MAINT_OLD-MAINT_NEW);
+  const mult = freqMult;
+
+  set('sv-old', fmtPKR(CUR_KW*rate*mult));
+  set('sv-new', fmtPKR(NEW_KW*rate*mult));
+  set('sv-save', fmtPKR(saveHr*mult));
+  set('sv-old-note', '600 kW · '+freqLabel);
+  set('sv-new-note', '396 kW · 3 VSD units · '+freqLabel);
+  set('sv-pct', ((saveHr/curCostHr)*100).toFixed(1)+'% energy cost reduction');
+  set('sv-combined', fmtPKR(combinedYr));
+  set('sv-combined-note', 'Energy Rs.'+(saveYr/1e6).toFixed(1)+'M + Maintenance Rs.6.5M yearly');
+
+  // Payback
+  updatePayback(vc, combinedYr);
+
+  // Recommendation summary
+  set('rec-e-save', fmtM(saveYr));
+  set('rec-combined', fmtM(combinedYr));
+  const pbK = vc.k.total/combinedYr*12, pbA = vc.a.total/combinedYr*12, pbD = vc.d.total/combinedYr*12;
+  set('rec-k-pb', pbK.toFixed(1)+' months');
+  set('rec-a-pb', pbA.toFixed(1)+' months');
+  set('rec-d-pb', pbD.toFixed(1)+' months');
+
+  updateCharts(vc, saveYr, combinedYr);
+}
+
+function syncAndRecalc(id, el){
+  const mirror = document.getElementById(id);
+  if(mirror) mirror.innerText = el.innerText;
+  recalcAll();
+}
+
+function updatePayback(vc, combinedYr){
+  const c = vc[pbVendor];
+  const pb = c.total/combinedYr*12;
+  const net3 = combinedYr*3 - c.total;
+  const net5 = combinedYr*5 - c.total;
+  set('pb-months', pb.toFixed(1)+' Mo');
+  set('roi-3yr', fmtPKR(net3));
+  set('roi-5yr', fmtPKR(net5));
+  set('pb-vendor-label', ({kaeser:'KAESER',atlas:'Atlas Copco',deman:'DEMAN'}[pbVendor])+' · full CAPEX recovery');
+
+  const el = document.getElementById('pb-bars');
+  const maxV = combinedYr*5;
+  el.innerHTML = [1,2,3,4,5].map(yr=>{
+    const val = combinedYr*yr - c.total;
+    const pct = Math.min(100, Math.abs(val)/maxV*100);
+    const pos = val>=0;
+    const color = pos?'linear-gradient(90deg,#00873d,#00c47a)':'linear-gradient(90deg,#8b1a1a,#e03c3c)';
+    return `<div class="pb-bar-row">
+      <div class="pb-bar-label">Year ${yr}</div>
+      <div class="pb-bar-track"><div class="pb-bar-fill" style="width:${pct.toFixed(1)}%;background:${color}">${pos?'PROFIT':'LOSS'}</div></div>
+      <div class="pb-bar-val" style="color:${pos?'var(--green)':'var(--red)'}">${pos?'+':''}${fmtShort(val)}</div>
+    </div>`;
+  }).join('');
+}
+
+// CHARTS
+let chartVendor, chartSavings, chartLine, chartROI;
+
+function initCharts(){
+  const tickStyle = {color:TC, font:{family:'Barlow Condensed', size:11}};
+  const gridColor = GC;
+
+  chartVendor = new Chart(document.getElementById('chartVendor').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:['KAESER','Atlas Copco','DEMAN'],
+      datasets:[{
+        label:'Total CAPEX incl. Tax (PKR M)',
+        data:[0,0,0],
+        backgroundColor:['rgba(41,121,212,.7)','rgba(0,196,122,.7)','rgba(245,158,11,.7)'],
+        borderRadius:6
+      }]
+    },
+    options:{...baseOpts(v=>'Rs.'+(v/1e6).toFixed(0)+'M'), plugins:{legend:{display:false}}}
+  });
+
+  chartSavings = new Chart(document.getElementById('chartSavings').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:['Current Fleet','Proposed VSD Fleet','Annual Saving'],
+      datasets:[{
+        data:[0,0,0],
+        backgroundColor:['rgba(224,60,60,.7)','rgba(41,121,212,.7)','rgba(0,196,122,.7)'],
+        borderRadius:6
+      }]
+    },
+    options:{...baseOpts(v=>'Rs.'+(v/1e6).toFixed(0)+'M'), plugins:{legend:{display:false}}}
+  });
+
+  chartLine = new Chart(document.getElementById('chartLine').getContext('2d'),{
+    type:'line',
+    data:{
+      labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+      datasets:[
+        {label:'Current Fleet', data:Array(12).fill(0), borderColor:'#e03c3c', backgroundColor:'rgba(224,60,60,.08)', tension:.4, fill:true, pointRadius:3},
+        {label:'Proposed VSD',  data:Array(12).fill(0), borderColor:'#00c47a', backgroundColor:'rgba(0,196,122,.08)', tension:.4, fill:true, pointRadius:3},
+      ]
+    },
+    options:baseOpts(v=>'Rs.'+(v/1e6).toFixed(1)+'M')
+  });
+
+  chartROI = new Chart(document.getElementById('chartROI').getContext('2d'),{
+    type:'line',
+    data:{
+      labels:['Start','Yr 1','Yr 2','Yr 3','Yr 4','Yr 5'],
+      datasets:[
+        {label:'KAESER',     data:Array(6).fill(0), borderColor:'#2979d4', backgroundColor:'rgba(41,121,212,.08)', tension:.4, fill:true, pointRadius:4},
+        {label:'Atlas Copco',data:Array(6).fill(0), borderColor:'#00c47a', backgroundColor:'rgba(0,196,122,.06)', tension:.4, fill:true, pointRadius:4},
+        {label:'DEMAN',      data:Array(6).fill(0), borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.06)', tension:.4, fill:true, pointRadius:4},
+      ]
+    },
+    options:baseOpts(v=>'Rs.'+(v/1e6).toFixed(0)+'M')
+  });
+}
+
+function updateCharts(vc, saveYr, combinedYr){
+  const rate = getRate();
+  chartVendor.data.datasets[0].data = [vc.k.total/1e6, vc.a.total/1e6, vc.d.total/1e6];
+  chartVendor.update('none');
+
+  const curYr = CUR_KW*rate*HRS, newYr = NEW_KW*rate*HRS;
+  chartSavings.data.datasets[0].data = [curYr/1e6, newYr/1e6, saveYr/1e6];
+  chartSavings.update('none');
+
+  const curM = curYr/12, newM = newYr/12;
+  chartLine.data.datasets[0].data = Array(12).fill(curM/1e6);
+  chartLine.data.datasets[1].data = Array(12).fill(newM/1e6);
+  chartLine.update('none');
+
+  const yrs = [0,1,2,3,4,5];
+  chartROI.data.datasets[0].data = yrs.map(y=>((combinedYr*y)-vc.k.total)/1e6);
+  chartROI.data.datasets[1].data = yrs.map(y=>((combinedYr*y)-vc.a.total)/1e6);
+  chartROI.data.datasets[2].data = yrs.map(y=>((combinedYr*y)-vc.d.total)/1e6);
+  chartROI.update('none');
+}
+
+function setVendor(v){
+  activeVendor = v;
+  ['kaeser','atlas','deman','all'].forEach(k=>{
+    document.getElementById('btn-'+k).className='vendor-btn'+(k===v?' active-'+k:'');
+  });
+  const cards = document.querySelectorAll('.vendor-card');
+  cards.forEach(c=>{c.classList.remove('visible')});
+  if(v==='all'){
+    cards.forEach(c=>c.classList.add('visible'));
+  } else {
+    const map={kaeser:'vc-kaeser',atlas:'vc-atlas',deman:'vc-deman'};
+    document.getElementById(map[v]).classList.add('visible');
+  }
+}
+
+function setPaybackVendor(v){
+  pbVendor = v;
+  ['kaeser','atlas','deman'].forEach(k=>{
+    document.getElementById('pb-btn-'+k).className='vendor-btn'+(k===v?' active-'+k:'');
+  });
+  const vc = vendorCosts();
+  const rate = getRate();
+  const saveYr = (CUR_KW-NEW_KW)*rate*HRS;
+  const combinedYr = saveYr+(MAINT_OLD-MAINT_NEW);
+  updatePayback(vc, combinedYr);
+}
+
+function setFreq(freq, el){
+  document.querySelectorAll('.freq-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const mults={hour:1,day:24,month:24*30,year:8760};
+  const labels={hour:'per hour',day:'per day',month:'per month',year:'per year'};
+  freqMult=mults[freq]; freqLabel=labels[freq];
+  recalcAll();
+}
+
+function scrollSec(id){
+  document.getElementById(id).scrollIntoView({behavior:'smooth'});
+}
+
+// Nav scroll spy
+window.addEventListener('DOMContentLoaded',()=>{
+  initCharts();
+  recalcAll();
+
+  const sections=['current','vendors','investment','savings','payback','recommendation'];
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+        const lnk = document.querySelector(`.nav-link[onclick="scrollSec('${e.target.id}')"]`);
+        if(lnk) lnk.classList.add('active');
+      }
+    });
+  },{threshold:.3});
+  sections.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el);});
+});
+</script>
+</body>
+</html>

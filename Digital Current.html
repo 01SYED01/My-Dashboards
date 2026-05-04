@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTM-2 | Digital Printing HVAC Optimization</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #0d1b2a;
+    --blue:   #1a4b8c;
+    --sky:    #2979d4;
+    --teal:   #00b4d8;
+    --green:  #00c47a;
+    --red:    #e03c3c;
+    --amber:  #f59e0b;
+    --white:  #ffffff;
+    --off:    #f0f4f9;
+    --panel:  #1e2d42;
+    --card:   #253650;
+    --muted:  #7a95b8;
+    --border: #2e4060;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Barlow',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+  header{background:linear-gradient(135deg,#0d1b2a 0%,#1a3a6b 100%);
+         border-bottom:3px solid var(--teal);padding:18px 32px;
+         display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .logo-block h1{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:800;
+                  letter-spacing:1px;color:var(--white)}
+  .logo-block h1 span{color:var(--teal)}
+  .logo-block p{font-size:.78rem;color:var(--muted);letter-spacing:.5px;margin-top:2px}
+  .header-badge{background:var(--teal);color:var(--navy);padding:6px 16px;border-radius:20px;
+                font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:1px}
+
+  .main{padding:24px 28px;max-width:1400px;margin:0 auto}
+  .top-note{background:linear-gradient(90deg,rgba(0,180,216,.15),rgba(0,180,216,.03));
+            border-left:4px solid var(--teal);padding:12px 18px;border-radius:0 8px 8px 0;
+            font-size:.85rem;color:#a8cde8;margin-bottom:24px;line-height:1.6}
+  .top-note strong{color:var(--teal)}
+
+  .floor-tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+  .ftab{background:var(--panel);border:2px solid var(--border);border-radius:10px;
+        padding:14px 24px;cursor:pointer;transition:all .25s;flex:1;min-width:200px;text-align:center}
+  .ftab:hover{border-color:var(--teal)}
+  .ftab.active{background:linear-gradient(135deg,var(--blue),var(--sky));
+               border-color:var(--teal);box-shadow:0 0 20px rgba(0,180,216,.25)}
+  .ftab h3{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.5px}
+  .ftab p{font-size:.75rem;color:var(--muted);margin-top:4px}
+  .ftab.active p{color:rgba(255,255,255,.7)}
+  .ftab .floor-badge{display:inline-block;background:rgba(255,255,255,.15);
+                      padding:2px 10px;border-radius:10px;font-size:.7rem;margin-top:6px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  @media(max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .card-title{font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:600;
+               letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+  .card-val{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:800;line-height:1}
+  .card-sub{font-size:.75rem;color:var(--muted);margin-top:6px}
+
+  /* FIX 1: Restored corrupted CSS class selectors */
+  .card.green{border-color:rgba(0,196,122,.4);background:linear-gradient(135deg,rgba(0,196,122,.08),var(--panel))}
+  .card.red{border-color:rgba(224,60,60,.4);background:linear-gradient(135deg,rgba(224,60,60,.08),var(--panel))}
+  .card.amber{border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.1),var(--panel))}
+  .card.teal{border-color:rgba(0,180,216,.4);background:linear-gradient(135deg,rgba(0,180,216,.1),var(--panel))}
+  .card-val.green{color:var(--green)}
+  .card-val.red{color:var(--red)}
+  .card-val.amber{color:var(--amber)}
+  .card-val.teal{color:var(--teal)}
+
+  .sec-label{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;
+              letter-spacing:2px;color:var(--teal);text-transform:uppercase;
+              border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px}
+
+  .ac-table{width:100%;border-collapse:collapse}
+  .ac-table th{background:var(--card);color:var(--muted);font-size:.72rem;font-weight:600;
+                letter-spacing:1px;text-transform:uppercase;padding:10px 12px;text-align:left;
+                border-bottom:2px solid var(--border)}
+  .ac-table td{padding:9px 12px;font-size:.83rem;border-bottom:1px solid rgba(46,64,96,.5);
+                vertical-align:middle}
+  .ac-table tr:hover td{background:rgba(41,121,212,.06)}
+  .ac-table tr.removed td{opacity:.55}
+  .ac-table tr.removed td:first-child{opacity:1}
+
+  .toggle-wrap{display:flex;align-items:center;gap:8px}
+  .toggle{position:relative;width:54px;height:26px;cursor:pointer}
+  .toggle input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:#e03c3c;border-radius:13px;transition:.3s}
+  .slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;
+                  background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  input:checked + .slider{background:var(--green)}
+  input:checked + .slider:before{transform:translateX(28px)}
+  .status-text{font-size:.72rem;font-weight:700;letter-spacing:.5px;min-width:52px}
+  .status-retain{color:var(--green)}
+  .status-remove{color:var(--red)}
+
+  .tons-badge{background:rgba(41,121,212,.2);color:#90c4ff;padding:2px 8px;
+              border-radius:6px;font-size:.72rem;font-weight:600}
+  .kwh-badge{background:rgba(0,180,216,.15);color:var(--teal);padding:2px 8px;
+             border-radius:6px;font-size:.72rem;font-weight:600}
+
+  .chart-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .chart-card h4{font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;
+                  letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:16px}
+  canvas{max-height:220px}
+
+  .savings-hero{background:linear-gradient(135deg,rgba(0,196,122,.12),rgba(0,180,216,.08));
+                border:2px solid rgba(0,196,122,.35);border-radius:16px;padding:24px 28px;
+                margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;
+                flex-wrap:wrap;gap:16px}
+  .savings-hero .big-num{font-family:'Barlow Condensed',sans-serif;font-size:3rem;
+                          font-weight:800;color:var(--green);line-height:1}
+  .savings-hero .big-label{font-size:.8rem;color:var(--muted);letter-spacing:.5px;margin-top:4px}
+  .savings-hero .note{font-size:.78rem;color:#7ab8a0;background:rgba(0,196,122,.1);
+                       padding:8px 14px;border-radius:8px;max-width:360px;line-height:1.5}
+
+  .freq-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .freq-pill{background:var(--card);border:1.5px solid var(--border);border-radius:20px;
+              padding:6px 18px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;
+              font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px}
+  .freq-pill.active{background:var(--sky);border-color:var(--sky);color:white}
+  .freq-pill:hover:not(.active){border-color:var(--teal);color:var(--teal)}
+
+  .floor-map{background:var(--card);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+  .floor-map svg{width:100%;height:auto}
+  .map-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+  .map-leg-item{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted)}
+  .map-dot{width:10px;height:10px;border-radius:2px}
+
+  .compare-bar{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .compare-label{font-size:.78rem;color:var(--muted);min-width:110px}
+  .bar-track{flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:22px;overflow:hidden;position:relative}
+  .bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1);
+             display:flex;align-items:center;padding-left:8px;font-size:.72rem;font-weight:700}
+  .bar-val{font-size:.78rem;font-weight:700;min-width:70px;text-align:right}
+
+  footer{background:var(--panel);border-top:1px solid var(--border);padding:14px 28px;
+         margin-top:32px;font-size:.72rem;color:var(--muted);display:flex;
+         justify-content:space-between;flex-wrap:wrap;gap:8px}
+  footer strong{color:var(--teal)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .fade-up{animation:fadeUp .4s ease both}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+  .live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;
+             animation:pulse 1.5s infinite;display:inline-block;margin-right:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <h1>GTM-2 <span>|</span> Digital Printing HVAC</h1>
+    <p>PROCESS CONTROL & COMPLIANCE  ·  HOME TEXTILE WOVEN FABRIC PROCESSING</p>
+  </div>
+  <div class="header-badge">FEASIBILITY SIMULATION</div>
+</header>
+
+<div class="main">
+
+  <div class="top-note">
+    <strong>How to use this dashboard:</strong> Select a floor tab below → Toggle individual AC units ON/OFF using the RETAIN/REMOVE switches → All charts and savings figures update instantly in real time. Compare the effect of different scenarios on Hourly, Daily, Monthly and Yearly savings.
+  </div>
+
+  <div class="floor-tabs">
+    <div class="ftab active" id="tab-1f" onclick="setFloor('1f')">
+      <h3>📍 1ST FLOOR</h3>
+      <p>JPK-3 · JPK-4 · JPK-5</p>
+      <div class="floor-badge" id="badge-1f">13 ACs · 59.5 Tons</div>
+    </div>
+    <div class="ftab" id="tab-2f" onclick="setFloor('2f')">
+      <h3>📍 2ND FLOOR</h3>
+      <p>JPK-1 · JPK-Evo 2 · JPK-7 Narrow</p>
+      <div class="floor-badge" id="badge-2f">12 ACs · 57.5 Tons</div>
+    </div>
+    <div class="ftab" id="tab-both" onclick="setFloor('both')">
+      <h3>🏢 BOTH FLOORS</h3>
+      <p>Combined Summary</p>
+      <div class="floor-badge" id="badge-both">25 ACs · 117 Tons</div>
+    </div>
+  </div>
+
+  <div class="savings-hero fade-up">
+    <div>
+      <div class="big-label"><span class="live-dot"></span>LIVE TOTAL COST SAVING</div>
+      <div class="big-num" id="hero-saving">PKR 0</div>
+      <div class="big-label" id="hero-period">per year · both floors</div>
+    </div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:800;color:var(--teal)" id="hero-kwh">0</div>
+        <div style="font-size:.72rem;color:var(--muted)">kW/h Saved</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:800;color:var(--amber)" id="hero-tons">0</div>
+        <div style="font-size:.72rem;color:var(--muted)">Tons Removed</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:800;color:var(--red)" id="hero-acs">0</div>
+        <div style="font-size:.72rem;color:var(--muted)">ACs Removed</div>
+      </div>
+    </div>
+    <div class="note">Mark any AC as <strong style="color:var(--red)">REMOVE</strong> to instantly see how much that unit saves. Combine multiple removals for total scenario analysis.</div>
+  </div>
+
+  <div class="freq-pills">
+    <span style="font-size:.8rem;color:var(--muted);line-height:2">View savings per:</span>
+    <div class="freq-pill active" onclick="setFreq('hour',this)">Hourly</div>
+    <div class="freq-pill" onclick="setFreq('day',this)">Daily</div>
+    <div class="freq-pill" onclick="setFreq('month',this)">Monthly</div>
+    <div class="freq-pill" onclick="setFreq('year',this)">Yearly</div>
+  </div>
+
+  <div class="grid4" id="kpi-grid">
+    <div class="card teal fade-up">
+      <div class="card-title">Load Saved</div>
+      <div class="card-val teal" id="kpi-kwh">0.00</div>
+      <div class="card-sub" id="kpi-kwh-label">kW/h removed</div>
+    </div>
+    <div class="card red fade-up" style="animation-delay:.05s">
+      <div class="card-title">Energy Saved</div>
+      <div class="card-val red" id="kpi-energy">0</div>
+      <div class="card-sub" id="kpi-energy-label">kWh per hour</div>
+    </div>
+    <div class="card green fade-up" style="animation-delay:.1s">
+      <div class="card-title">Cost Saved</div>
+      <div class="card-val green" id="kpi-cost">PKR 0</div>
+      <div class="card-sub" id="kpi-cost-label">per hour</div>
+    </div>
+    <div class="card amber fade-up" style="animation-delay:.15s">
+      <div class="card-title">Capacity Cut</div>
+      <div class="card-val amber" id="kpi-tons">0</div>
+      <div class="card-sub">Tons decommissioned</div>
+    </div>
+  </div>
+
+  <div class="grid2" id="floor-section">
+    <div class="card fade-up">
+      <div class="sec-label" id="ac-table-title">1st Floor – AC Register</div>
+      <table class="ac-table" id="ac-table-body">
+        <thead>
+          <tr>
+            <th>STATUS</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Tons</th>
+            <th>kW/h</th>
+          </tr>
+        </thead>
+        <tbody id="ac-rows"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="chart-card fade-up" style="animation-delay:.1s">
+        <h4>Floor Area Visualization</h4>
+        <div class="floor-map" id="floor-map-wrap">
+          <svg id="floor-svg" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="map-legend">
+          <div class="map-leg-item"><div class="map-dot" style="background:#2979d4"></div>Print-head AC Zone (RETAIN)</div>
+          <div class="map-leg-item"><div class="map-dot" style="background:#e03c3c"></div>General Area (REMOVE)</div>
+          <div class="map-leg-item"><div class="map-dot" style="background:#7a95b8"></div>Support AC (Office/Lab)</div>
+        </div>
+      </div>
+
+      <div class="chart-card fade-up" style="animation-delay:.15s">
+        <h4>Current vs Proposed – Running Load</h4>
+        <div id="compare-bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:18px">
+    <div class="chart-card fade-up">
+      <h4>Savings Breakdown (kW/h)</h4>
+      <canvas id="chartDonut"></canvas>
+    </div>
+    <div class="chart-card fade-up" style="animation-delay:.05s">
+      <h4>Cost Saving by Period (PKR)</h4>
+      <canvas id="chartBar"></canvas>
+    </div>
+    <div class="chart-card fade-up" style="animation-delay:.1s">
+      <h4>Monthly Projection – Both Floors</h4>
+      <canvas id="chartLine"></canvas>
+    </div>
+  </div>
+
+  <div id="both-section" style="display:none">
+    <div class="card fade-up" style="margin-bottom:18px">
+      <div class="sec-label">Combined Both Floors – Summary</div>
+      <div id="combined-table"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div><strong>Gul Ahmed Textile Mills Ltd – GTM-2</strong> · Home Textile Woven Fabric Processing · Digital Printing Dept</div>
+  <div>Prepared by: Process Control & Compliance · Rate: PKR 42/kWh · 24 hrs/day · 30 days/month</div>
+</footer>
+
+<script>
+const RATE = 42;
+const HRS_DAY = 24;
+const DAYS_MONTH = 30;
+
+const floors = {
+  '1f': {
+    label: '1st Floor',
+    machines: 'JPK-3 · JPK-4 · JPK-5',
+    totalArea: 9200,
+    machineArea: 3150.64,
+    acs: [
+      {id:'1f-1',  desc:'Print Zone – JPK-3',       type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'1f-2',  desc:'Print Zone – JPK-3',       type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'1f-3',  desc:'Print Zone – JPK-4 & 5',  type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'1f-4',  desc:'Print Zone – JPK-4 & 5',  type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'1f-5',  desc:'Print Zone – JPK-4 & 5',  type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'1f-6',  desc:'Print Zone – JPK-4 & 5',  type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'1f-7',  desc:'General Floor Area',       type:'Floor Standing', tons:8,   kwh:14.4628, zone:'general', retain:false},
+      {id:'1f-8',  desc:'Office',                   type:'Split',          tons:2,   kwh:2.1912,  zone:'support', retain:true},
+      {id:'1f-9',  desc:'Office',                   type:'Split',          tons:2,   kwh:2.1912,  zone:'support', retain:true},
+      {id:'1f-10', desc:'Library',                  type:'Split',          tons:2,   kwh:2.1912,  zone:'support', retain:true},
+      {id:'1f-11', desc:'Chemical Store',           type:'Split',          tons:2,   kwh:2.1912,  zone:'support', retain:true},
+      {id:'1f-12', desc:'Chemical Store',           type:'Split',          tons:2,   kwh:2.1912,  zone:'support', retain:true},
+      {id:'1f-13', desc:'Chemical Store',           type:'Split',          tons:1.5, kwh:1.6434,  zone:'support', retain:true},
+    ]
+  },
+  '2f': {
+    label: '2nd Floor',
+    machines: 'JPK-1 · JPK-Evo 2 · JPK-7',
+    totalArea: 9200,
+    machineArea: 3698.64,
+    acs: [
+      {id:'2f-1',  desc:'Print Zone – JPK-1',          type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'2f-2',  desc:'Print Zone – JPK-1',          type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'2f-3',  desc:'Print Zone – JPK-Evo 2 & 7', type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'2f-4',  desc:'Print Zone – JPK-Evo 2 & 7', type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'2f-5',  desc:'Print Zone – JPK-Evo 2 & 7', type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'2f-6',  desc:'Print Zone – JPK-Evo 2 & 7', type:'Floor Standing', tons:8,   kwh:14.4628, zone:'machine',  retain:true},
+      {id:'2f-7',  desc:'General Floor Area',           type:'Floor Standing', tons:8,   kwh:14.4628, zone:'general', retain:false},
+      {id:'2f-8',  desc:'General Floor Area',           type:'Floor Standing', tons:8,   kwh:14.4628, zone:'general', retain:false},
+      {id:'2f-9',  desc:'Library',                      type:'Floor Standing', tons:4,   kwh:4.6018,  zone:'support', retain:true},
+      {id:'2f-10', desc:'Office',                       type:'Split',          tons:2,   kwh:2.1912,  zone:'support', retain:true},
+      {id:'2f-11', desc:'Office',                       type:'Split',          tons:2,   kwh:2.1912,  zone:'support', retain:true},
+      {id:'2f-12', desc:'Chemical Store',               type:'Split',          tons:1.5, kwh:1.6434,  zone:'support', retain:true},
+    ]
+  }
+};
+
+let currentFloor = '1f';
+let freqMultiplier = 1;
+let freqLabel = 'per hour';
+let donutChart, barChart, lineChart;
+
+function calcFloor(floorKey) {
+  const f = floors[floorKey];
+  let totalKwh=0, retainKwh=0, removeKwh=0, retainTons=0, removeTons=0, removeCount=0;
+  f.acs.forEach(ac => {
+    totalKwh += ac.kwh;
+    if (ac.retain) { retainKwh += ac.kwh; retainTons += ac.tons; }
+    else           { removeKwh += ac.kwh; removeTons += ac.tons; removeCount++; }
+  });
+  return { totalKwh, retainKwh, removeKwh, retainTons, removeTons, removeCount };
+}
+
+function calcBoth() {
+  const a = calcFloor('1f'), b = calcFloor('2f');
+  return {
+    totalKwh:    a.totalKwh + b.totalKwh,
+    retainKwh:   a.retainKwh + b.retainKwh,
+    removeKwh:   a.removeKwh + b.removeKwh,
+    retainTons:  a.retainTons + b.retainTons,
+    removeTons:  a.removeTons + b.removeTons,
+    removeCount: a.removeCount + b.removeCount,
+    f1: a, f2: b
+  };
+}
+
+function fmt(n, dec=0) {
+  return n.toLocaleString('en-PK', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
+function fmtPKR(n) {
+  if (n >= 1e7) return 'PKR ' + fmt(n/1e7,2) + ' Cr';
+  if (n >= 1e5) return 'PKR ' + fmt(n/1e5,2) + ' Lac';
+  return 'PKR ' + fmt(n);
+}
+
+function renderACTable(floorKey) {
+  const f = floors[floorKey];
+  const tbody = document.getElementById('ac-rows');
+  document.getElementById('ac-table-title').textContent = f.label + ' – AC Register';
+  tbody.innerHTML = '';
+  f.acs.forEach(ac => {
+    const tr = document.createElement('tr');
+    if (!ac.retain) tr.classList.add('removed');
+    tr.innerHTML = `
+      <td>
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" ${ac.retain ? 'checked' : ''} onchange="toggleAC('${ac.id}','${floorKey}',this.checked)">
+            <span class="slider"></span>
+          </label>
+          <span class="status-text ${ac.retain ? 'status-retain' : 'status-remove'}" id="st-${ac.id}">
+            ${ac.retain ? 'RETAIN' : 'REMOVE'}
+          </span>
+        </div>
+      </td>
+      <td>${ac.desc}</td>
+      <td><span style="font-size:.7rem;color:var(--muted)">${ac.type}</span></td>
+      <td><span class="tons-badge">${ac.tons}T</span></td>
+      <td><span class="kwh-badge">${ac.kwh.toFixed(2)}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// FIX 2: Restored corrupted JS dot-notation (a.id, ac.retain, etc.)
+function toggleAC(id, floorKey, checked) {
+  const ac = floors[floorKey].acs.find(a => a.id === id);
+  if (ac) {
+    ac.retain = checked;
+    const st = document.getElementById('st-' + id);
+    if (st) {
+      st.textContent = checked ? 'RETAIN' : 'REMOVE';
+      st.className = 'status-text ' + (checked ? 'status-retain' : 'status-remove');
+    }
+    const rows = document.getElementById('ac-rows').querySelectorAll('tr');
+    const idx = floors[floorKey].acs.indexOf(ac);
+    if (rows[idx]) rows[idx].classList.toggle('removed', !checked);
+  }
+  updateAll();
+}
+
+// FIX 3: Restored corrupted z.zone, z.id, a.id references in floor map
+function renderFloorMap(floorKey) {
+  const svg = document.getElementById('floor-svg');
+  svg.innerHTML = '';
+  if (floorKey === 'both') {
+    svg.innerHTML = '<text x="250" y="100" text-anchor="middle" fill="#7a95b8" font-size="14">Select a single floor to view map</text>';
+    return;
+  }
+  const f = floors[floorKey];
+  const W=480, H=170, pad=10;
+  svg.setAttribute('viewBox', `0 0 ${W+pad*2} ${H+pad*2}`);
+
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('x',pad); bg.setAttribute('y',pad);
+  bg.setAttribute('width',W); bg.setAttribute('height',H);
+  bg.setAttribute('rx','6'); bg.setAttribute('fill','#1e2d42');
+  bg.setAttribute('stroke','#2e4060'); bg.setAttribute('stroke-width','1.5');
+  svg.appendChild(bg);
+
+  const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  lbl.setAttribute('x', pad+8); lbl.setAttribute('y', pad+14);
+  lbl.setAttribute('fill','#7a95b8'); lbl.setAttribute('font-size','9');
+  lbl.setAttribute('font-family','Barlow Condensed,sans-serif');
+  lbl.textContent = f.label.toUpperCase() + ' · TOTAL: ' + fmt(f.totalArea) + ' SQ.FT';
+  svg.appendChild(lbl);
+
+  const zones = floorKey === '1f' ? [
+    {label:'JPK-3\nZone',     x:pad+15,  y:pad+22, w:110, h:120, zone:'machine', id:'1f-1'},
+    {label:'JPK-4 & 5\nZone', x:pad+135, y:pad+22, w:200, h:120, zone:'machine', id:'1f-3'},
+    {label:'General\nArea',   x:pad+345, y:pad+22, w:95,  h:60,  zone:'general', id:'1f-7'},
+    {label:'Support\nACs',    x:pad+345, y:pad+92, w:95,  h:50,  zone:'support', id:'1f-8'},
+  ] : [
+    {label:'JPK-1\nZone',         x:pad+15,  y:pad+22, w:165, h:120, zone:'machine', id:'2f-1'},
+    {label:'JPK-Evo2\n& JPK-7',  x:pad+190, y:pad+22, w:150, h:120, zone:'machine', id:'2f-3'},
+    {label:'General\nArea',       x:pad+350, y:pad+22, w:95,  h:55,  zone:'general', id:'2f-7'},
+    {label:'Support\nACs',        x:pad+350, y:pad+87, w:95,  h:55,  zone:'support', id:'2f-9'},
+  ];
+
+  const colors  = { machine:'#1a4b8c', general:'#6b1f1f', support:'#253650' };
+  const strokes = { machine:'#2979d4', general:'#e03c3c', support:'#7a95b8' };
+  const textCol = { machine:'#90c4ff', general:'#ff9090', support:'#7a95b8' };
+
+  zones.forEach(z => {
+    const srcAC = floorKey === '1f'
+      ? floors['1f'].acs.find(a => a.id === z.id)
+      : floors['2f'].acs.find(a => a.id === z.id);
+    const retained = srcAC ? srcAC.retain : true;
+    const opacity = retained ? 1 : 0.4;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', z.x); rect.setAttribute('y', z.y);
+    rect.setAttribute('width', z.w); rect.setAttribute('height', z.h);
+    rect.setAttribute('rx','4');
+    rect.setAttribute('fill', colors[z.zone]);
+    rect.setAttribute('stroke', strokes[z.zone]);
+    rect.setAttribute('stroke-width','1.5');
+    rect.setAttribute('opacity', opacity);
+    svg.appendChild(rect);
+
+    if (z.zone !== 'support') {
+      const acCount = z.zone === 'machine'
+        ? (floorKey === '1f' ? (z.id === '1f-1' ? 2 : 4) : (z.id === '2f-1' ? 2 : 4))
+        : 2;
+      for (let i=0; i<Math.min(acCount,4); i++) {
+        const ac_r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        ac_r.setAttribute('x', z.x + 6 + i*(z.w/acCount - 2));
+        ac_r.setAttribute('y', z.y + z.h - 22);
+        ac_r.setAttribute('width', Math.max(18, z.w/acCount - 6));
+        ac_r.setAttribute('height', 16);
+        ac_r.setAttribute('rx','3');
+        ac_r.setAttribute('fill', retained ? strokes[z.zone] : '#555');
+        ac_r.setAttribute('opacity','0.7');
+        svg.appendChild(ac_r);
+      }
+    }
+
+    const lines = z.label.split('\n');
+    lines.forEach((line, li) => {
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', z.x + z.w/2); t.setAttribute('y', z.y + 20 + li*13);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('fill', textCol[z.zone]);
+      t.setAttribute('font-size','9');
+      t.setAttribute('font-family','Barlow Condensed,sans-serif');
+      t.setAttribute('font-weight','700');
+      t.setAttribute('opacity', opacity);
+      t.textContent = line;
+      svg.appendChild(t);
+    });
+  });
+}
+
+function renderCompareBars(data) {
+  const el = document.getElementById('compare-bars');
+  const maxKwh = data.totalKwh * 1.05;
+  el.innerHTML = `
+    <div class="compare-bar">
+      <div class="compare-label">Current Load</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#1a4b8c,#2979d4)">
+          ${data.totalKwh.toFixed(1)} kW/h
+        </div>
+      </div>
+    </div>
+    <div class="compare-bar">
+      <div class="compare-label">Proposed (Retain)</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(data.retainKwh/maxKwh*100).toFixed(1)}%;background:linear-gradient(90deg,#00873d,#00c47a)">
+          ${data.retainKwh.toFixed(1)} kW/h
+        </div>
+      </div>
+    </div>
+    <div class="compare-bar">
+      <div class="compare-label">Being Removed</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(data.removeKwh/maxKwh*100).toFixed(1)}%;background:linear-gradient(90deg,#8b1a1a,#e03c3c)">
+          ${data.removeKwh.toFixed(1)} kW/h
+        </div>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:8px">
+      Reduction: <strong style="color:var(--green)">${data.totalKwh>0?(data.removeKwh/data.totalKwh*100).toFixed(1):0}%</strong> of total floor load
+    </div>`;
+}
+
+function initCharts() {
+  const ctx1 = document.getElementById('chartDonut').getContext('2d');
+  donutChart = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['Retain (kW/h)','Remove (kW/h)'],
+      datasets: [{ data:[0,0],
+        backgroundColor:['rgba(0,196,122,.8)','rgba(224,60,60,.8)'],
+        borderColor:['#00c47a','#e03c3c'], borderWidth:2, hoverOffset:6 }]
+    },
+    options: { cutout:'68%', plugins:{ legend:{ position:'bottom', labels:{ color:'#7a95b8', font:{ family:'Barlow Condensed', size:11 } } } }, animation:{ animateRotate:true } }
+  });
+
+  const ctx2 = document.getElementById('chartBar').getContext('2d');
+  barChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['Hourly','Daily','Monthly','Yearly'],
+      datasets: [{ label:'Saved (PKR)', data:[0,0,0,0],
+        backgroundColor:['rgba(0,180,216,.7)','rgba(0,196,122,.7)','rgba(245,158,11,.7)','rgba(224,60,60,.7)'],
+        borderRadius:4 }]
+    },
+    options: { plugins:{ legend:{ display:false } }, scales:{
+      x:{ticks:{color:'#7a95b8',font:{family:'Barlow Condensed'}},grid:{color:'rgba(46,64,96,.4)'}},
+      y:{ticks:{color:'#7a95b8',font:{family:'Barlow Condensed'},callback:v=>v>=1e5?'PKR '+(v/1e5).toFixed(1)+'L':'PKR '+v},grid:{color:'rgba(46,64,96,.4)'}}
+    }}
+  });
+
+  const ctx3 = document.getElementById('chartLine').getContext('2d');
+  lineChart = new Chart(ctx3, {
+    type: 'line',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+      datasets: [
+        { label:'Current Cost',  data:Array(12).fill(0), borderColor:'#2979d4', backgroundColor:'rgba(41,121,212,.1)', tension:.4, fill:true, pointRadius:3 },
+        { label:'Proposed Cost', data:Array(12).fill(0), borderColor:'#00c47a', backgroundColor:'rgba(0,196,122,.1)', tension:.4, fill:true, pointRadius:3 },
+      ]
+    },
+    options: { plugins:{ legend:{ labels:{ color:'#7a95b8', font:{family:'Barlow Condensed',size:11} } } },
+      scales:{ x:{ticks:{color:'#7a95b8',font:{family:'Barlow Condensed'}},grid:{color:'rgba(46,64,96,.4)'}},
+               y:{ticks:{color:'#7a95b8',font:{family:'Barlow Condensed'},callback:v=>'PKR '+(v/1e3).toFixed(0)+'K'},grid:{color:'rgba(46,64,96,.4)'}}
+    }}
+  });
+}
+
+function updateCharts(data) {
+  donutChart.data.datasets[0].data = [data.retainKwh, data.removeKwh];
+  donutChart.update();
+
+  const hourSaving = data.removeKwh * RATE;
+  barChart.data.datasets[0].data = [
+    hourSaving, hourSaving*HRS_DAY, hourSaving*HRS_DAY*DAYS_MONTH, hourSaving*HRS_DAY*DAYS_MONTH*12
+  ];
+  barChart.update();
+
+  const both = calcBoth();
+  const curMonthlyCost  = both.totalKwh  * RATE * HRS_DAY * DAYS_MONTH;
+  const propMonthlyCost = both.retainKwh * RATE * HRS_DAY * DAYS_MONTH;
+  lineChart.data.datasets[0].data = Array(12).fill(curMonthlyCost);
+  lineChart.data.datasets[1].data = Array(12).fill(propMonthlyCost);
+  lineChart.update();
+}
+
+function updateKPIs(data) {
+  const savedKwh  = data.removeKwh;
+  const energySaved = savedKwh * freqMultiplier;
+  const costSaved   = savedKwh * RATE * freqMultiplier;
+
+  document.getElementById('kpi-kwh').textContent = savedKwh.toFixed(2);
+  document.getElementById('kpi-kwh-label').textContent = 'kW/h removed';
+  document.getElementById('kpi-energy').textContent = fmt(energySaved, 1);
+  document.getElementById('kpi-energy-label').textContent = 'kWh ' + freqLabel;
+  document.getElementById('kpi-cost').textContent = fmtPKR(costSaved);
+  document.getElementById('kpi-cost-label').textContent = freqLabel;
+  document.getElementById('kpi-tons').textContent = data.removeTons.toFixed(1);
+
+  const both = calcBoth();
+  const annualSaving = both.removeKwh * RATE * HRS_DAY * DAYS_MONTH * 12;
+  document.getElementById('hero-saving').textContent = fmtPKR(annualSaving);
+  document.getElementById('hero-kwh').textContent = fmt(both.removeKwh, 2);
+  document.getElementById('hero-tons').textContent = fmt(both.removeTons, 1);
+  document.getElementById('hero-acs').textContent = both.removeCount;
+  document.getElementById('hero-period').textContent = 'per year · both floors';
+}
+
+function updateBadges() {
+  ['1f','2f'].forEach(fk => {
+    const f = floors[fk];
+    const totalAcs  = f.acs.length;
+    const totalTons = f.acs.reduce((s,a) => s + a.tons, 0);
+    document.getElementById('badge-'+fk).textContent = totalAcs + ' ACs · ' + totalTons + ' Tons';
+  });
+  const t1 = floors['1f'].acs.length + floors['2f'].acs.length;
+  const t2 = floors['1f'].acs.reduce((s,a)=>s+a.tons,0) + floors['2f'].acs.reduce((s,a)=>s+a.tons,0);
+  document.getElementById('badge-both').textContent = t1 + ' ACs · ' + t2 + ' Tons';
+}
+
+function renderCombined() {
+  const both = calcBoth();
+  const el = document.getElementById('combined-table');
+  const rows = [
+    ['Parameter','1st Floor','2nd Floor','Combined'],
+    ['Total ACs', floors['1f'].acs.length, floors['2f'].acs.length, floors['1f'].acs.length+floors['2f'].acs.length],
+    ['ACs Removed', both.f1.removeCount, both.f2.removeCount, both.removeCount],
+    ['Capacity Removed (Tons)', both.f1.removeTons.toFixed(1), both.f2.removeTons.toFixed(1), both.removeTons.toFixed(1)],
+    ['Power Saved (kW/h)', both.f1.removeKwh.toFixed(2), both.f2.removeKwh.toFixed(2), both.removeKwh.toFixed(2)],
+    ['Energy Saved / Day (kWh)', fmt(both.f1.removeKwh*24,1), fmt(both.f2.removeKwh*24,1), fmt(both.removeKwh*24,1)],
+    ['Cost Saved / Month (PKR)', fmtPKR(both.f1.removeKwh*RATE*24*30), fmtPKR(both.f2.removeKwh*RATE*24*30), fmtPKR(both.removeKwh*RATE*24*30)],
+    ['Cost Saved / Year (PKR)',  fmtPKR(both.f1.removeKwh*RATE*24*30*12), fmtPKR(both.f2.removeKwh*RATE*24*30*12), fmtPKR(both.removeKwh*RATE*24*30*12)],
+  ];
+
+  let html = '<table style="width:100%;border-collapse:collapse">';
+  rows.forEach((row, ri) => {
+    const isHdr = ri === 0;
+    html += '<tr>';
+    row.forEach((cell, ci) => {
+      const isLast = ci === row.length - 1;
+      const style = isHdr
+        ? `background:var(--card);color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 14px;text-align:${ci===0?'left':'center'};border-bottom:2px solid var(--border)`
+        : `padding:9px 14px;font-size:.85rem;text-align:${ci===0?'left':'center'};border-bottom:1px solid rgba(46,64,96,.5);${isLast?'font-weight:700;color:var(--teal)':''}${ri%2===0&&!isHdr?'background:rgba(30,45,66,.4)':''}`;
+      html += `<${isHdr?'th':'td'} style="${style}">${cell}</${isHdr?'th':'td'}>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  el.innerHTML = html;
+}
+
+function updateAll() {
+  const data = currentFloor === 'both' ? calcBoth() : calcFloor(currentFloor);
+  updateKPIs(data);
+  updateCharts(data);
+  updateBadges();
+  if (currentFloor !== 'both') {
+    renderCompareBars(data);
+    renderFloorMap(currentFloor);
+  }
+  if (currentFloor === 'both') renderCombined();
+}
+
+function setFloor(key) {
+  currentFloor = key;
+  ['1f','2f','both'].forEach(k => {
+    document.getElementById('tab-'+k).classList.toggle('active', k===key);
+  });
+  const bothSec  = document.getElementById('both-section');
+  const floorSec = document.getElementById('floor-section');
+  if (key === 'both') {
+    floorSec.style.display = 'none';
+    bothSec.style.display  = 'block';
+  } else {
+    floorSec.style.display = 'grid';
+    bothSec.style.display  = 'none';
+    renderACTable(key);
+    renderFloorMap(key);
+  }
+  updateAll();
+}
+
+function setFreq(freq, el) {
+  document.querySelectorAll('.freq-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const multipliers = { hour:1, day:HRS_DAY, month:HRS_DAY*DAYS_MONTH, year:HRS_DAY*DAYS_MONTH*12 };
+  const labels      = { hour:'per hour', day:'per day', month:'per month', year:'per year' };
+  freqMultiplier = multipliers[freq];
+  freqLabel      = labels[freq];
+  updateAll();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initCharts();
+  renderACTable('1f');
+  updateAll();
+});
+</script>
+</body>
+</html>
