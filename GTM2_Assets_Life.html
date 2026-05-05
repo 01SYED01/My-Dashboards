@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTM-2 | AC Asset Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#07111e;--dark:#0d1b2a;--panel:#111f30;--card:#172334;--card2:#1d2e42;
+  --border:#1e3352;--sky:#2979d4;--teal:#00b4d8;--green:#00c47a;--red:#e03c3c;
+  --amber:#f59e0b;--white:#fff;--muted:#5a7a9a;--light:#8fb0d0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#07111e,#0d2040);border-bottom:2px solid var(--teal);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.hdr-left h1{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;letter-spacing:1px}
+.hdr-left h1 span{color:var(--teal)}
+.hdr-left p{font-size:.72rem;color:var(--muted);letter-spacing:.5px;margin-top:2px}
+.hdr-right{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:1px;
+  padding:8px 16px;border-radius:6px;border:none;cursor:pointer;transition:all .2s;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.btn-green{background:var(--green);color:var(--navy)}.btn-green:hover{background:#00e88f}
+.btn-teal{background:var(--teal);color:var(--navy)}.btn-teal:hover{background:#00d4ff}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--light)}
+.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
+.btn-red{background:var(--red);color:white}
+.btn-sm{padding:5px 10px;font-size:.7rem}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;
+  padding:18px 28px;background:var(--dark);border-bottom:1px solid var(--border)}
+.kpi{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.kpi-label{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;
+  letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:900;line-height:1}
+.kpi-val.teal{color:var(--teal)}.kpi-val.green{color:var(--green)}
+.kpi-val.amber{color:var(--amber)}.kpi-val.red{color:var(--red)}.kpi-val.sky{color:var(--sky)}
+.kpi-sub{font-size:.68rem;color:var(--muted);margin-top:3px}
+
+/* TOOLBAR */
+.toolbar{padding:14px 28px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  background:var(--dark);border-bottom:1px solid var(--border)}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:300px}
+.search-wrap input{width:100%;background:var(--panel);border:1px solid var(--border);
+  border-radius:6px;padding:8px 12px 8px 34px;color:var(--white);font-size:.82rem;font-family:'Barlow',sans-serif}
+.search-wrap input:focus{outline:none;border-color:var(--teal)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem}
+select{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+  padding:8px 12px;color:var(--white);font-size:.8rem;font-family:'Barlow',sans-serif;cursor:pointer}
+select:focus{outline:none;border-color:var(--teal)}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.cat-tab{font-family:'Barlow Condensed',sans-serif;font-size:.76rem;font-weight:700;letter-spacing:.5px;
+  padding:6px 14px;border-radius:5px;border:1.5px solid var(--border);cursor:pointer;
+  transition:all .2s;color:var(--muted);background:var(--panel)}
+.cat-tab.active{background:var(--sky);border-color:var(--sky);color:white}
+.cat-tab:hover:not(.active){border-color:var(--teal);color:var(--teal)}
+.results-count{font-size:.75rem;color:var(--muted);margin-left:auto;white-space:nowrap}
+
+/* TABLE */
+.table-wrap{padding:0 28px 20px;overflow-x:auto}
+.ac-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.81rem}
+.ac-table th{background:var(--card2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;
+  font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.ac-table th:hover{color:var(--light)}
+.ac-table th.sorted-asc::after{content:" ↑"}
+.ac-table th.sorted-desc::after{content:" ↓"}
+.ac-table td{padding:8px 12px;border-bottom:1px solid rgba(30,51,82,.4);vertical-align:middle;color:var(--light)}
+.ac-table tr:hover td{background:rgba(41,121,212,.05)}
+.ac-table td strong{color:var(--white)}
+
+.cat-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;
+  font-size:.63rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.cat-office{background:rgba(41,121,212,.2);color:#90c4ff;border:1px solid rgba(41,121,212,.3)}
+.cat-panel{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.cat-chiller{background:rgba(0,180,216,.15);color:var(--teal);border:1px solid rgba(0,180,216,.3)}
+.cat-water{background:rgba(0,196,122,.12);color:var(--green);border:1px solid rgba(0,196,122,.3)}
+.cat-dryer{background:rgba(156,39,176,.15);color:#ce93d8;border:1px solid rgba(156,39,176,.3)}
+.cat-comp{background:rgba(255,87,34,.12);color:#ff8a65;border:1px solid rgba(255,87,34,.3)}
+
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;font-size:.66rem;font-weight:700;white-space:nowrap}
+.s-running{background:rgba(0,196,122,.12);color:var(--green);border:1px solid rgba(0,196,122,.25)}
+.s-service{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+.s-maintenance{background:rgba(224,60,60,.12);color:var(--red);border:1px solid rgba(224,60,60,.25)}
+.s-decommissioned{background:rgba(90,122,154,.1);color:var(--muted);border:1px solid rgba(90,122,154,.2)}
+.s-sold{background:rgba(90,122,154,.1);color:var(--muted);border:1px solid rgba(90,122,154,.2)}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.d-green{background:var(--green)}.d-amber{background:var(--amber)}
+.d-red{background:var(--red)}.d-gray{background:var(--muted)}
+
+.action-btns{display:flex;gap:5px}
+.icon-btn{background:transparent;border:1px solid var(--border);border-radius:4px;
+  width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;transition:all .2s;color:var(--muted)}
+.icon-btn:hover.edit{border-color:var(--sky);color:var(--sky);background:rgba(41,121,212,.1)}
+.icon-btn:hover.del{border-color:var(--red);color:var(--red);background:rgba(224,60,60,.1)}
+.no-data{text-align:center;padding:48px;color:var(--muted);font-size:.9rem}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;gap:8px;padding:14px 28px;
+  border-top:1px solid var(--border);justify-content:space-between;flex-wrap:wrap}
+.pagination-info{font-size:.76rem;color:var(--muted)}
+.page-btns{display:flex;gap:5px}
+.page-btn{background:var(--panel);border:1px solid var(--border);border-radius:5px;
+  padding:5px 11px;cursor:pointer;font-size:.76rem;color:var(--light);transition:all .2s}
+.page-btn:hover,.page-btn.active{background:var(--sky);border-color:var(--sky);color:white}
+.page-btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);
+  z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:26px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.modal h3{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:800;
+  color:var(--teal);letter-spacing:1px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:2px 6px}
+.modal-close:hover{color:var(--red)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.form-grid{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;
+  letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.form-group input,.form-group select,.form-group textarea{
+  background:var(--card2);border:1px solid var(--border);border-radius:6px;
+  padding:8px 11px;color:var(--white);font-size:.83rem;font-family:'Barlow',sans-serif}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--teal)}
+.form-group textarea{resize:vertical;min-height:56px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;
+  padding-top:14px;border-top:1px solid var(--border)}
+
+/* CONFIRM */
+.confirm-modal{background:var(--panel);border:1px solid rgba(224,60,60,.3);border-radius:14px;
+  padding:26px;width:100%;max-width:400px;text-align:center}
+.confirm-modal h3{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--red);margin-bottom:10px}
+.confirm-modal p{font-size:.83rem;color:var(--light);margin-bottom:16px;line-height:1.6}
+.confirm-btns{display:flex;gap:8px;justify-content:center}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 18px;font-size:.82rem;color:var(--white);z-index:9999;
+  animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.success{border-color:rgba(0,196,122,.4)}.toast.error{border-color:rgba(224,60,60,.4)}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.hidden{display:none!important}
+
+/* PDF print */
+@media print{
+  header .hdr-right,nav,.toolbar .btn,#modal-overlay,#confirm-overlay,.action-btns,.pagination{display:none!important}
+  body{background:white;color:black}
+  .ac-table th{background:#eee;color:#333}
+  .ac-table td{border-bottom:1px solid #ddd;color:#222}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-left">
+    <h1>GTM-2 <span>|</span> AC Asset Management</h1>
+    <p>GUL AHMED TEXTILE MILLS · HOME TEXTILE · COMPLETE ASSET REGISTER · AS OF FEB 2026</p>
+  </div>
+  <div class="hdr-right">
+    <button class="btn btn-green" onclick="openAddModal()">＋ Add Unit</button>
+    <button class="btn btn-outline" onclick="triggerImport()" style="border-color:var(--amber);color:var(--amber)">⬆ Import Excel</button>
+    <input type="file" id="import-file-input" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
+    <button class="btn btn-teal" onclick="exportExcel()">⬇ Excel</button>
+    <button class="btn btn-outline" onclick="exportPDF()">⬇ PDF</button>
+    <span id="save-indicator" style="font-size:.7rem;color:var(--green);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;display:none">💾 SAVED</span>
+  </div>
+</header>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi"><div class="kpi-label">Total Units</div><div class="kpi-val teal" id="kpi-total">0</div><div class="kpi-sub">All categories</div></div>
+  <div class="kpi"><div class="kpi-label">Office ACs</div><div class="kpi-val sky" id="kpi-office">0</div><div class="kpi-sub">Split & floor standing</div></div>
+  <div class="kpi"><div class="kpi-label">Panel ACs</div><div class="kpi-val amber" id="kpi-panel">0</div><div class="kpi-sub">Machine panels</div></div>
+  <div class="kpi"><div class="kpi-label">Chillers</div><div class="kpi-val teal" id="kpi-chiller">0</div><div class="kpi-sub">Industrial chillers</div></div>
+  <div class="kpi"><div class="kpi-label">Running</div><div class="kpi-val green" id="kpi-running">0</div><div class="kpi-sub">Active units</div></div>
+  <div class="kpi"><div class="kpi-label">Need Service</div><div class="kpi-val amber" id="kpi-service">0</div><div class="kpi-sub">Require attention</div></div>
+  <div class="kpi"><div class="kpi-label">Decommissioned</div><div class="kpi-val red" id="kpi-decomm">0</div><div class="kpi-sub">Removed from fleet</div></div>
+  <div class="kpi"><div class="kpi-label">Total Tons</div><div class="kpi-val" style="color:var(--light)" id="kpi-tons">0</div><div class="kpi-sub">Cooling capacity</div></div>
+  <div class="kpi"><div class="kpi-label">Running kW/h</div><div class="kpi-val" style="color:var(--light)" id="kpi-kwh">0</div><div class="kpi-sub">Active load</div></div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Search location, name, make..." oninput="applyFilters()">
+  </div>
+  <select id="filter-status" onchange="applyFilters()">
+    <option value="">All Status</option>
+    <option>Running</option>
+    <option>Need Service</option>
+    <option>Under Maintenance</option>
+    <option>Decommissioned</option>
+    <option>Sold</option>
+    <option>Shifted</option>
+  </select>
+  <select id="filter-make" onchange="applyFilters()">
+    <option value="">All Makes</option>
+  </select>
+  <select id="filter-loc" onchange="applyFilters()">
+    <option value="">All Locations</option>
+  </select>
+  <div class="cat-tabs">
+    <div class="cat-tab active" onclick="setCat('',this)">All</div>
+    <div class="cat-tab" onclick="setCat('Office AC',this)">Offices</div>
+    <div class="cat-tab" onclick="setCat('Panel AC',this)">Panels</div>
+    <div class="cat-tab" onclick="setCat('Chiller',this)">Chillers</div>
+    <div class="cat-tab" onclick="setCat('Water Cooler',this)">Water Coolers</div>
+    <div class="cat-tab" onclick="setCat('Air Dryer',this)">Air Dryers</div>
+    <div class="cat-tab" onclick="setCat('Compressor',this)">Compressors</div>
+  </div>
+  <span class="results-count" id="results-count"></span>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <table class="ac-table">
+    <thead>
+      <tr>
+        <th onclick="sortBy('id')">#</th>
+        <th onclick="sortBy('category')">Category</th>
+        <th onclick="sortBy('location')">Location</th>
+        <th onclick="sortBy('name')">Name / Area</th>
+        <th onclick="sortBy('make')">Make</th>
+        <th onclick="sortBy('type')">Type</th>
+        <th onclick="sortBy('tons')">Tons</th>
+        <th onclick="sortBy('kwh')">kW/h</th>
+        <th onclick="sortBy('gasType')">Gas</th>
+        <th onclick="sortBy('installYear')">Year</th>
+        <th onclick="sortBy('status')">Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="ac-tbody"></tbody>
+  </table>
+  <div id="no-data" class="no-data hidden">No units found.</div>
+</div>
+
+<!-- PAGINATION -->
+<div class="pagination">
+  <div class="pagination-info" id="page-info"></div>
+  <div class="page-btns" id="page-btns"></div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay hidden" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <h3 id="modal-title">➕ Add New Unit <button class="modal-close" onclick="closeModal()">✕</button></h3>
+    <div class="form-grid">
+      <div class="form-group"><label>Category *</label>
+        <select id="f-category">
+          <option>Office AC</option><option>Panel AC</option>
+          <option>Chiller</option><option>Water Cooler</option>
+          <option>Air Dryer</option><option>Compressor</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Status *</label>
+        <select id="f-status">
+          <option>Running</option><option>Need Service</option>
+          <option>Under Maintenance</option><option>Decommissioned</option>
+        </select>
+      </div>
+      <div class="form-group full"><label>Location *</label>
+        <input type="text" id="f-location" placeholder="e.g. Digital Printing 1st Floor">
+      </div>
+      <div class="form-group"><label>Name / Area</label>
+        <input type="text" id="f-name" placeholder="e.g. Print Zone JPK-3">
+      </div>
+      <div class="form-group"><label>Make / Brand</label>
+        <input type="text" id="f-make" placeholder="e.g. Kenwood">
+      </div>
+      <div class="form-group"><label>Type</label>
+        <input type="text" id="f-type" placeholder="e.g. Split, Floor Standing">
+      </div>
+      <div class="form-group"><label>Capacity (Tons)</label>
+        <input type="number" id="f-tons" step="0.5" min="0" placeholder="e.g. 2">
+      </div>
+      <div class="form-group"><label>Running kW/h</label>
+        <input type="number" id="f-kwh" step="0.01" min="0" placeholder="e.g. 2.19">
+      </div>
+      <div class="form-group"><label>Gas Type</label>
+        <select id="f-gas">
+          <option value="">Unknown</option>
+          <option>R-22</option><option>R-410A</option>
+          <option>R-407C</option><option>R-134a</option><option>R-404a</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Installation Year</label>
+        <input type="number" id="f-year" min="1990" max="2030" placeholder="e.g. 2022">
+      </div>
+      <div class="form-group"><label>Asset Tag</label>
+        <input type="text" id="f-tag" placeholder="e.g. PA-9009">
+      </div>
+      <div class="form-group"><label>AMP</label>
+        <input type="number" id="f-amp" step="0.5" placeholder="e.g. 12">
+      </div>
+      <div class="form-group full"><label>Remarks</label>
+        <textarea id="f-remarks" placeholder="Any notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveUnit()">💾 Save Unit</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM REMOVE MODAL -->
+<div class="overlay hidden" id="confirm-overlay" onclick="closeConfirm(event)">
+  <div class="confirm-modal">
+    <h3>🗑️ Remove Unit?</h3>
+    <p id="confirm-msg">Remove this unit?</p>
+    <div style="margin-bottom:14px">
+      <select id="remove-reason" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--white);font-size:.82rem;width:100%">
+        <option value="Decommissioned">Decommission — keep in records</option>
+        <option value="Sold">Sold</option>
+        <option value="Shifted">Shifted to another location</option>
+        <option value="Faulty">Faulty / Scrapped</option>
+        <option value="delete">Permanently Delete from register</option>
+      </select>
+    </div>
+    <div class="confirm-btns">
+      <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-red" onclick="confirmRemove()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let DB = [{"id": 1, "category": "Office AC", "location": "SHOW ROOM", "name": "AMIR AKBANI ROOM", "make": "MITSUBISHI", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 2, "category": "Office AC", "location": "SHOW ROOM", "name": "AMIR AKBANI Staff", "make": "Daikool", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 3, "category": "Office AC", "location": "SHOW ROOM", "name": "INDUS VELLY  (Conference Hall)", "make": "Gree", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 4, "category": "Office AC", "location": "SHOW ROOM", "name": "SHOW ROOM", "make": "Unknown", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 5, "category": "Office AC", "location": "SHOW ROOM", "name": "SHOW ROOM", "make": "Unknown", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 6, "category": "Office AC", "location": "SHOW ROOM", "name": "SHOW ROOM", "make": "Unknown", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 7, "category": "Office AC", "location": "Grieg Purchasing", "name": "Umair Raja", "make": "Euro Air", "type": "split inviter", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 8, "category": "Office AC", "location": "ADMIN OFFICE", "name": "(Zunair & Staff)", "make": "Euro Air", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 9, "category": "Office AC", "location": "ADMIN OFFICE", "name": "ADMIN OFFICE", "make": "Euro Air", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 10, "category": "Office AC", "location": "ADMIN OFFICE", "name": "ADMIN OFFICE", "make": "Euro Air", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 11, "category": "Office AC", "location": "ADMIN OFFICE", "name": "ADMIN OFFICE", "make": "Midea", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 12, "category": "Office AC", "location": "ADMIN OFFICE", "name": "ADMIN OFFICE", "make": "Euro Air", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 13, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "ZKB", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 14, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "Aman Saeed", "make": "Kenwood", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 15, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "Aman Saeed  team", "make": "Kenwood", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 16, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "Waleed", "make": "Euro Air", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 17, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "Asif Baig", "make": "Kenwood", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 18, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "Altaf", "make": "Euro Air", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 19, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "Zeeshan Butt", "make": "Euro Air", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 20, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "HFT", "make": "Euro Air", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 21, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "HFT", "make": "Euro Air", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 22, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "main Hall", "make": "Euro Air", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 23, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "CPD OFFICE INVETER A/C", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 24, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "CPD OFFICE INVETER A/C", "make": "Daikool", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 25, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "CPD OFFICE INVETER A/C", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 26, "category": "Office AC", "location": "CPD OFFICE INVETER A/C", "name": "CPD OFFICE INVETER A/C", "make": "Haier", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R- 410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 27, "category": "Office AC", "location": "Main Processing Office", "name": "Directors Block", "make": "ZHR", "type": "Kenwood", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 28, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Mahmood Khan", "type": "Kenwood", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 29, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Conference room", "type": "Haier", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 30, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Asif Saleem", "type": "Daikool", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 31, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Ashraf Ilyas", "type": "Kenwood", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 32, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Main Hall", "type": "Eure Air", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 33, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Unknown", "type": "General", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 34, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Unknown", "type": "Daikool", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 35, "category": "Office AC", "location": "Main Processing Office", "name": "Main Processing Office", "make": "Faisal Usmani", "type": "Euro", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 36, "category": "Office AC", "location": "SEQUIRTY OFFICE GTM 2 GATE", "name": "COL", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 37, "category": "Office AC", "location": "SEQUIRTY OFFICE GTM 2 GATE", "name": "GATE OFFICE", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 38, "category": "Office AC", "location": "SEQUIRTY OFFICE GTM 2 GATE", "name": "Rashid GATE OFFICE (SO)", "make": "Kenwood", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 39, "category": "Office AC", "location": "SEQUIRTY OFFICE GTM 2 GATE", "name": "WAITING ROOM", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 40, "category": "Office AC", "location": "TIME OFFICE", "name": "Aleena Baig", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 41, "category": "Office AC", "location": "MESS", "name": "A/C#01", "make": "Euro Air", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 42, "category": "Office AC", "location": "MESS", "name": "A/C#02", "make": "Euro Air", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 43, "category": "Office AC", "location": "PRINTING  & SAMPLING", "name": "Zaki A/C#01", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 44, "category": "Office AC", "location": "PRINTING  & SAMPLING", "name": "Zaki Staff A/C #2", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 45, "category": "Office AC", "location": "PRINTING  & SAMPLING", "name": "Zaki Staff A/C #2", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 46, "category": "Office AC", "location": "IPS  Office UNICA 1", "name": "Sajid Mahmood & Staff", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 47, "category": "Office AC", "location": "IPS  Office UNICA 1", "name": "IPS  Office UNICA 1", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 48, "category": "Office AC", "location": "IPS  Office UNICA 1", "name": "IPS  Office UNICA 1", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 49, "category": "Office AC", "location": "SICK ROOM", "name": "SICK ROOM", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 50, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "LAB (MAIN HALL) AC #1", "make": "Patel", "type": "PACKAGE UNIT", "tons": 16.0, "kw": 56.0, "kwh": 17.4605, "amp": 32, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 51, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "LAB (MAIN HALL) AC #2", "make": "Patel", "type": "Split", "tons": 16.0, "kw": 56.0, "kwh": 17.4605, "amp": 32, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 52, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "LAB (RMT)", "make": "Kenwood", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 53, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "LAB (RMT)", "make": "Kenwood", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 54, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "Eco Lab", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 55, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "RMT Washing Area", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 56, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "FTS", "make": "Denco", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R- 407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 57, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "DATA COLOR ROOM", "make": "Gree", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 58, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "LIGHT FASTING ROOM", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 59, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "PROCESSING LAB AREA QC LAB", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 60, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "Sohaib", "make": "Euro Air", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 61, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "Zahir Shah", "make": "Euro Air", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 62, "category": "Office AC", "location": "PROCESSING LAB AREA QC LAB", "name": "Famina", "make": "Euro Air", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 63, "category": "Office AC", "location": "ON LINE QUILITY LAB", "name": "LAB", "make": "Euro Air", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 64, "category": "Office AC", "location": "ON LINE QUILITY LAB", "name": "LAB", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 65, "category": "Office AC", "location": "ON LINE QUILITY LAB", "name": "Waseem Arain", "make": "Haier", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 66, "category": "Office AC", "location": "SUB CHEMICAL STORE MAINTENACE COMPLEX", "name": "Murad", "make": "Daikool", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 67, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "HALL", "make": "Daikool", "type": "FLOOR STANDING", "tons": 16.0, "kw": 56.0, "kwh": 17.4605, "amp": 32, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 68, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "UK & USA  MARKETING  AREA TUCK SHOP", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 69, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Ahsan Faraz team", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 70, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Rehan Irfan", "make": "Haier", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 71, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Shakeel Ahmed", "make": "Haier", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 72, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Khawar", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 73, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Majeed", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 74, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Yasir Khan", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 75, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Harees", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 76, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Madam Anam", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 77, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Maqsood", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 78, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Javed Faqeer Md", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 79, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Akhtr Saeed", "make": "Orient", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 80, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Tahir Fqreed", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 81, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Ali Raza", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 82, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Adil", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 83, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Shahid Babar", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 84, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Hamid Baig", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 85, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Taha Baig", "make": "Orient", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 86, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Hall", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 87, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "UK & USA  MARKETING  AREA TUCK SHOP", "make": "Unknown", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 88, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "UK & USA  MARKETING  AREA TUCK SHOP", "make": "Unknown", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 89, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "UK & USA  MARKETING  AREA TUCK SHOP", "make": "Unknown", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 90, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Ashraf", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 91, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Shahid team member", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 92, "category": "Office AC", "location": "UK & USA  MARKETING  AREA TUCK SHOP", "name": "Usman", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 93, "category": "Office AC", "location": "OILD IKEA MARKETING TUCK SHOP", "name": "Saleem PA", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 94, "category": "Office AC", "location": "OILD IKEA MARKETING TUCK SHOP", "name": "ilyas Team", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.5521, "amp": 8.5, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 95, "category": "Office AC", "location": "OILD IKEA MARKETING TUCK SHOP", "name": "Kashif Team", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.5521, "amp": 8.5, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 96, "category": "Office AC", "location": "OILD IKEA MARKETING TUCK SHOP", "name": "Naveed Zafar", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.5521, "amp": 8.5, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 97, "category": "Office AC", "location": "OILD IKEA MARKETING TUCK SHOP", "name": "Yasir Khan", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 98, "category": "Office AC", "location": "OILD IKEA MARKETING TUCK SHOP", "name": "Kashif", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.5521, "amp": 8.5, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 99, "category": "Office AC", "location": "OILD IKEA MARKETING TUCK SHOP", "name": "Khurram", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.5521, "amp": 8.5, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 100, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Liaquat Ali", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 101, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Junaid Waheed", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 102, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Atiq Ahmed", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 103, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Haidar", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 104, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Conference Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 105, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Khurram Siddique", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 106, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Zahid Malik", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 107, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Planning Hall", "make": "Gree", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 108, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Planning Office", "make": "Kenwood", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 109, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Planning Office", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 110, "category": "Office AC", "location": "5B area Extension Area 5B OFFICES", "name": "Planning offfice", "make": "Daikin", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 111, "category": "Office AC", "location": "Exective MESS", "name": "Hall", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 112, "category": "Office AC", "location": "GTM (2)OPERATOR  TUCK SHOP", "name": "Hanif", "make": "Haier", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 113, "category": "Office AC", "location": "P.D OFFICES LABOUR CANTEEN", "name": "Waqas Ahmed", "make": "Haier", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 114, "category": "Office AC", "location": "P.D OFFICES LABOUR CANTEEN", "name": "Owais", "make": "Haier", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 115, "category": "Office AC", "location": "P.D OFFICES LABOUR CANTEEN", "name": "Salam", "make": "Haier", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 116, "category": "Office AC", "location": "P.D OFFICES LABOUR CANTEEN", "name": "Pd Office", "make": "Euro Air", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 117, "category": "Office AC", "location": "P.D OFFICES LABOUR CANTEEN", "name": "Hall", "make": "Gree", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 118, "category": "Office AC", "location": "MAINT COMPLEX", "name": "Vaccant Office", "make": "Dawlance", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 119, "category": "Office AC", "location": "MAINT COMPLEX", "name": "Faisal Bogio", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 120, "category": "Office AC", "location": "MAINT COMPLEX", "name": "Maintenance Staff", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 121, "category": "Office AC", "location": "MAINT COMPLEX", "name": "Electronics Lab", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 122, "category": "Office AC", "location": "MAINT COMPLEX", "name": "Planning Office", "make": "Orient", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 123, "category": "Office AC", "location": "MAINT COMPLEX", "name": "Javed Ali", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 124, "category": "Office AC", "location": "PLANNAING & SYSTEM MAINT COMPLEX", "name": "JALAL (DIRECTOR)", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 125, "category": "Office AC", "location": "PLANNAING & SYSTEM MAINT COMPLEX", "name": "Ali Hafeez", "make": "Daikool", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 126, "category": "Office AC", "location": "PLANNAING & SYSTEM MAINT COMPLEX", "name": "M. Mudassir", "make": "Daikool", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 127, "category": "Office AC", "location": "PLANNAING & SYSTEM MAINT COMPLEX", "name": "HALL", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 128, "category": "Office AC", "location": "EXPORT FOLDING (SHED SEGREGATION)", "name": "FOLDING OFFICE  (SHED SEGREGATION)", "make": "Daikool", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 129, "category": "Office AC", "location": "EXPORT FOLDING (SHED SEGREGATION)", "name": "Iqbal Bhai", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 130, "category": "Office AC", "location": "EXPORT FOLDING (SHED SEGREGATION)", "name": "Iqbal Satff", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 131, "category": "Office AC", "location": "Dyeing Export Office", "name": "GM Office", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 132, "category": "Office AC", "location": "Dyeing Export Office", "name": "Staff", "make": "Kenwood", "type": "sPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 133, "category": "Office AC", "location": "Dyeing Export Office", "name": "Dyeing Export Office", "make": "York", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 134, "category": "Office AC", "location": "Dyeing Export Office", "name": "Dyeing Export Office", "make": "Euro Air", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 135, "category": "Office AC", "location": "Dyeing Export Office", "name": "Sabir", "make": "Euro Air", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 136, "category": "Office AC", "location": "Dyeing Export Office", "name": "Saleem uddin", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 137, "category": "Office AC", "location": "INVENTORY DEPARTMENT  (MOHAN KHEMJEE)  LABOUR CANTEEN 1st floor and 2nd floor", "name": "Abu bakr and shafqat", "make": "Haier", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 138, "category": "Office AC", "location": "INVENTORY DEPARTMENT  (MOHAN KHEMJEE)  LABOUR CANTEEN 1st floor and 2nd floor", "name": "Vaccant Office", "make": "Daikool", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 139, "category": "Office AC", "location": "INVENTORY DEPARTMENT  (MOHAN KHEMJEE)  LABOUR CANTEEN 1st floor and 2nd floor", "name": "Vaccant Office", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 140, "category": "Office AC", "location": "INVENTORY DEPARTMENT  (MOHAN KHEMJEE)  LABOUR CANTEEN 1st floor and 2nd floor", "name": "Kamal", "make": "Haier", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 141, "category": "Office AC", "location": "INVENTORY DEPARTMENT  (MOHAN KHEMJEE)  LABOUR CANTEEN 1st floor and 2nd floor", "name": "HALL", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 142, "category": "Office AC", "location": "INVENTORY DEPARTMENT  (MOHAN KHEMJEE)  LABOUR CANTEEN 1st floor and 2nd floor", "name": "HALL", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 143, "category": "Office AC", "location": "LOCAL  DYEING SHEZAN", "name": "Shehzan", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 144, "category": "Office AC", "location": "LOCAL  DYEING SHEZAN", "name": "Shakeel Marfani", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 145, "category": "Office AC", "location": "LOCAL  DYEING SHEZAN", "name": "Riaz", "make": "Dawlance", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 146, "category": "Office AC", "location": "LOCAL  DYEING SHEZAN", "name": "Office", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 147, "category": "Office AC", "location": "LOCAL  DYEING SHEZAN", "name": "Iftikhar", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 148, "category": "Office AC", "location": "LASER ROTARY  ENGRAVING", "name": "ROTARY ENGRAVING A/C#01", "make": "Daikool", "type": "FLOOR STANDING", "tons": 12.0, "kw": 42.0, "kwh": 15.8236, "amp": 29, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 149, "category": "Office AC", "location": "LASER ROTARY  ENGRAVING", "name": "ROTARY ENGRAVING A/C#02", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 150, "category": "Office AC", "location": "LASER ROTARY  ENGRAVING", "name": "Couding", "make": "Acson", "type": "FLOOR STANDING", "tons": 12.0, "kw": 42.0, "kwh": 15.8236, "amp": 29, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 151, "category": "Office AC", "location": "LASER ROTARY  ENGRAVING", "name": "Chemical Room", "make": "Euro Air", "type": "SPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 152, "category": "Office AC", "location": "LASER ROTARY  ENGRAVING", "name": "LASER ROTARY  ENGRAVING", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 153, "category": "Office AC", "location": "FLAT  ENGRAVING", "name": "FLAT ENGRAVING HALL", "make": "Motor Act", "type": "FLOOR STANDING", "tons": 12.0, "kw": 42.0, "kwh": 15.8236, "amp": 29, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 154, "category": "Office AC", "location": "FLAT  ENGRAVING", "name": "FLAT ENGRAVING HALL", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 155, "category": "Office AC", "location": "FLAT  ENGRAVING", "name": "Javed Naeem", "make": "Acson", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 156, "category": "Office AC", "location": "GENTS DESIGNING", "name": "Zaheeruddin Babar & Staff", "make": "Acson", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 157, "category": "Office AC", "location": "GENTS DESIGNING", "name": "Zaheeruddin Babar & Staff", "make": "Acson", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 158, "category": "Office AC", "location": "GENTS DESIGNING", "name": "GENTS DESIGNING", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 159, "category": "Office AC", "location": "LADIES DESIGNING", "name": "Madam Nida & satff", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 160, "category": "Office AC", "location": "LADIES DESIGNING", "name": "LADIES DESIGNING", "make": "Daikool", "type": "FLOOR STANDING", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 161, "category": "Office AC", "location": "LADIES DESIGNING", "name": "LADIES DESIGNING", "make": "Daikool", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 162, "category": "Office AC", "location": "IDEAS HOME TEXTILE", "name": "Urooj Mughal & Staff", "make": "Euro Air", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 163, "category": "Office AC", "location": "IDEAS HOME TEXTILE", "name": "IDEAS HOME TEXTILE", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 164, "category": "Office AC", "location": "IDEAS HOME TEXTILE", "name": "IDEAS HOME TEXTILE", "make": "GENERAL", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 165, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEP HALL", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 166, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 167, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 168, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "SERVER ROOM", "make": "Daikool", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 169, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Daikool", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 170, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Daikool", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 171, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "NETWORK ROOM", "make": "MITSUBISHI", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 172, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 173, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Motor Act", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 174, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "CC ROOM", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 175, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Haier", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 176, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT Support Staff", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 177, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 178, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "Kashif Sheikh", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 179, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "Abid", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 180, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "UPS ROOM", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 181, "category": "Office AC", "location": "IT DEPARTMENT ALL", "name": "IT DEPARTMENT ALL", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 182, "category": "Office AC", "location": "LADIES PRAY AREA", "name": "LADIES PRAY AREA", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 183, "category": "Office AC", "location": "HR/IT TRAINING HALL", "name": "AC #01", "make": "Orient", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 184, "category": "Office AC", "location": "HR/IT TRAINING HALL", "name": "AC #02", "make": "Orient", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 185, "category": "Office AC", "location": "HR/IT TRAINING HALL", "name": "AC # 03", "make": "Acson", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 186, "category": "Office AC", "location": "HR/IT TRAINING HALL", "name": "AC # 04", "make": "Haier", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 187, "category": "Office AC", "location": "HR/IT TRAINING HALL", "name": "AC # 05", "make": "Haier", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 188, "category": "Office AC", "location": "ETP", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 189, "category": "Office AC", "location": "ETP", "name": "ETP", "make": "Kenwood", "type": "SPLIT", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 190, "category": "Office AC", "location": "LT/HT ROOM", "name": "HALL", "make": "Cool Maz", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 191, "category": "Office AC", "location": "LT/HT ROOM", "name": "LT/HT ROOM", "make": "Euro Air", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 192, "category": "Office AC", "location": "Shahzaman (Police 15)", "name": "POLICE 15 OFFICE # 1", "make": "Haier", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 193, "category": "Office AC", "location": "Shahzaman (Police 15)", "name": "OFFICE # 2", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 194, "category": "Office AC", "location": "Shahzaman (Police 15)", "name": "OFFICE # 3", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 195, "category": "Office AC", "location": "TABLE PRINTING ICHINOS OFFICE", "name": "Muneer", "make": "Haier", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 196, "category": "Office AC", "location": "TABLE PRINTING ICHINOS OFFICE", "name": "BUSER LIBRARY", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 197, "category": "Office AC", "location": "BUSER", "name": "SQUGEE", "make": "Haier", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 198, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "MS Digital printing First floor ROOM-01", "make": "Euro Air", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 199, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Patel", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 200, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Patel", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 201, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 202, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 203, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Patel", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 204, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Patel", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 205, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "OFFICE", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 206, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 207, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "LIABRURAY", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 208, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "CHEIMICAL STORE", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 209, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 210, "category": "Office AC", "location": "DIGITAL PRINTING 1ST FLOOR", "name": "DIGITAL PRINTING 1ST FLOOR", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 211, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "MS Digital printing Second floor ROOM-01", "make": "Patel", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 212, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Patel", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 213, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Patel", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 214, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 215, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Cool Max", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 216, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Euro Air", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 7.639, "amp": 14, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 217, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 218, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 219, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "LIABRURAY", "make": "Euro Air", "type": "FLOOR STANDING", "tons": 4.0, "kw": 14.0, "kwh": 3.8195, "amp": 7, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 220, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "OFFICE", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 221, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "DIGITAL PRINTING 2ND FLOOR", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 222, "category": "Office AC", "location": "DIGITAL PRINTING 2ND FLOOR", "name": "CHEIMICAL STORE", "make": "Euro Air", "type": "SPLIT", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": ""}, {"id": 223, "category": "Office AC", "location": "Ground Floor", "name": "DIGITAL PRINTING JAVELIN", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 224, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 225, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Daikool", "type": "FLOOR STANDING", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 226, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Daikool", "type": "Duct Type", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 227, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Daikool", "type": "Duct Type", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 228, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Daikool", "type": "Duct Type", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 229, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Daikool", "type": "Duct Type", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 230, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Daikool", "type": "Duct Type", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 231, "category": "Office AC", "location": "Ground Floor", "name": "Ground Floor", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 232, "category": "Office AC", "location": "DIGITAL PRINTING", "name": "Library", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 233, "category": "Office AC", "location": "DIGITAL PRINTING", "name": "Library", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 234, "category": "Office AC", "location": "DIGITAL PRINTING", "name": "INK ROOM", "make": "Cool Max", "type": "Duct Type", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 235, "category": "Office AC", "location": "DIGITAL PRINTING", "name": "INK ROOM", "make": "Daikool", "type": "Duct Type", "tons": 8.0, "kw": 28.0, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 236, "category": "Office AC", "location": "EXTENSION AREA", "name": "OFFICE Buser", "make": "Daikool", "type": "Split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 237, "category": "Office AC", "location": "PIGMENT DIGITAL PRINTING ZIMMER", "name": "AC PLANT", "make": "COOL POINT", "type": "PACKAGE UNIT", "tons": 24.0, "kw": 84.0, "kwh": 44.3745, "amp": 75, "tag": "", "gasType": "R-410 A", "installYear": "", "status": "Running", "remarks": ""}, {"id": 238, "category": "Office AC", "location": "PIGMENT DIGITAL PRINTING ZIMMER", "name": "PANEL AC", "make": "Unknown", "type": "ROOF Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.5478, "amp": 3, "tag": "", "gasType": "R134a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 239, "category": "Office AC", "location": "PIGMENT DIGITAL PRINTING ZIMMER", "name": "CHILLER UNIT", "make": "Unknown", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-=407", "installYear": "", "status": "Running", "remarks": ""}, {"id": 240, "category": "Office AC", "location": "PIGMENT DIGITAL PRINTING ZIMMER", "name": "CHILLER UNIT", "make": "Unknown", "type": "Split", "tons": 0.5, "kw": 1.75, "kwh": 0.5478, "amp": 3, "tag": "", "gasType": "R134a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 241, "category": "Office AC", "location": "Bleaching Office", "name": "ONLINE LAB", "make": "Kenwood", "type": "sPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 242, "category": "Office AC", "location": "Bleaching Office", "name": "ONLINE LAB", "make": "Kenwood", "type": "sPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 243, "category": "Office AC", "location": "Electric Workshop", "name": "Electrical Staff", "make": "Kenwood", "type": "sPLIT", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 244, "category": "Office AC", "location": "Electric Workshop", "name": "Electric Workshop", "make": "Kenwood", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 245, "category": "Office AC", "location": "Electric Workshop", "name": "Electric Workshop", "make": "Kenwood", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 246, "category": "Office AC", "location": "Electric Workshop", "name": "Electric Workshop", "make": "Kenwood", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 247, "category": "Office AC", "location": "New Clr Kitchen-5B", "name": "clr kitchen", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 248, "category": "Office AC", "location": "New Clr Kitchen-5B", "name": "clr kitchen", "make": "Kenwood", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 249, "category": "Office AC", "location": "Chamical Store unica-01", "name": "Rehan", "make": "Daikool", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 250, "category": "Office AC", "location": "HBL ATM", "name": "atm", "make": "Haier", "type": "split", "tons": 1.5, "kw": 5.25, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R22a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 251, "category": "Office AC", "location": "Habib metro", "name": "atm", "make": "Euro Air", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R22a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 252, "category": "Office AC", "location": "Process Control & Compliance", "name": "Mustafa Saleem", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 253, "category": "Office AC", "location": "Process Control & Compliance", "name": "Staff", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R134a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 254, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Managers Room", "make": "Kenwood", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 255, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 256, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 257, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 258, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 259, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 260, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Board Room/ Conference room", "make": "Haier", "type": "cassette type/Inverter", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 261, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 262, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 263, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 264, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Work station small area", "make": "Haier", "type": "cassette type/Inverter", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 265, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 266, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Work station Large area", "make": "Haier", "type": "cassette type/Inverter", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 267, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 268, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "Split", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 269, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "IT Room", "make": "Kenwood", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 270, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Unknown", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 271, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Coffee Counter area", "make": "Kenwood", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 272, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Recreational area Emergency Exist side", "make": "Kenwood", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 273, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Female prayer area", "make": "Kenwood", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 274, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Shortage area", "make": "Kenwood", "type": "split/Inverter", "tons": 2.0, "kw": 7.0, "kwh": 0.6391, "amp": 3.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 275, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "Photocopy Area", "make": "Kenwood", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 276, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "HALL", "make": "Haier", "type": "split/Inverter", "tons": 1.5, "kw": 5.25, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 277, "category": "Office AC", "location": "New IKEA Marketing Offices", "name": "New IKEA Marketing Offices", "make": "Kenwood", "type": "split/Inverter", "tons": 1.0, "kw": 3.5, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 278, "category": "Office AC", "location": "EXPORT FOLDING GODOWN", "name": "Shahid", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 279, "category": "Office AC", "location": "HFT Marketing", "name": "Office", "make": "Haier", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 280, "category": "Office AC", "location": "HFT Marketing", "name": "Office", "make": "Dowlance", "type": "split", "tons": 1.0, "kw": 3.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 281, "category": "Office AC", "location": "OTS OFFICE", "name": "Staff", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 282, "category": "Office AC", "location": "OTS OFFICE", "name": "Staff", "make": "Kenwood", "type": "split", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 283, "category": "Office AC", "location": "Coating Machine", "name": "Staff", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 284, "category": "Office AC", "location": "Coating Machine", "name": "Staff", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 285, "category": "Office AC", "location": "Coating Machine", "name": "Staff", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 286, "category": "Office AC", "location": "Coating Machine", "name": "Staff", "make": "GENERAL", "type": "SPLIT", "tons": 2.0, "kw": 7.0, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R410a", "installYear": "", "status": "Running", "remarks": ""}, {"id": 287, "category": "Panel AC", "location": "MONFORTS STENTER # 02", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2014, "status": "Running", "remarks": ""}, {"id": 288, "category": "Panel AC", "location": "MONFORTS STENTER # 02", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2014, "status": "Running", "remarks": ""}, {"id": 289, "category": "Panel AC", "location": "MONFORTS STENTER # 02", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 290, "category": "Panel AC", "location": "MONFORTS STENTER # 02", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2014, "status": "Running", "remarks": ""}, {"id": 291, "category": "Panel AC", "location": "MONFORTS STENTER # 02", "name": "Panel Room", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "", "installYear": 2014, "status": "Running", "remarks": ""}, {"id": 292, "category": "Panel AC", "location": "BRUCKNER STENTER 01", "name": "PANEL ROOM", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 293, "category": "Panel AC", "location": "BRUCKNER STENTER 01", "name": "Panel Room", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2017, "status": "Need Service", "remarks": ""}, {"id": 294, "category": "Panel AC", "location": "BRUCKNER STENTER 01", "name": "Panel Room", "make": "York", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2017, "status": "Running", "remarks": ""}, {"id": 295, "category": "Panel AC", "location": "BRUCKNER STENTER 01", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2017, "status": "Running", "remarks": ""}, {"id": 296, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 02 (5b)", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 297, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 02 (5b)", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 298, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 02 (5b)", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2020, "status": "Need Service", "remarks": ""}, {"id": 299, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 02 (5b)", "name": "Panel Room", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 300, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 02 (5b)", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 301, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 03 (5b)", "name": "PANEL ROOM", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 302, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 03 (5b)", "name": "Panel Room", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Need Service", "remarks": ""}, {"id": 303, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 03 (5b)", "name": "Panel Room", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 304, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 03 (5b)", "name": "Panel Room", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 305, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 04 (5b)", "name": "PANEL ROOM", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 306, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 04 (5b)", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 307, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 04 (5b)", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Need Service", "remarks": ""}, {"id": 308, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 04 (5b)", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 309, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 05 (5b)", "name": "PANEL ROOM", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 310, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 05 (5b)", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 311, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 05 (5b)", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 312, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 05 (5b)", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Need Service", "remarks": ""}, {"id": 313, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 06", "name": "PANEL ROOM", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2023, "status": "Running", "remarks": ""}, {"id": 314, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 06", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2023, "status": "Running", "remarks": ""}, {"id": 315, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 06", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2023, "status": "Need Service", "remarks": ""}, {"id": 316, "category": "Panel AC", "location": "NEW BRUCKNER STENTER 06", "name": "Panel Room", "make": "Kenwood", "type": "", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2023, "status": "Running", "remarks": ""}, {"id": 317, "category": "Panel AC", "location": "BENNINGER BLEACHING-01 5b", "name": "PANEL ROOM", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 318, "category": "Panel AC", "location": "BENNINGER BLEACHING-01 5b", "name": "Panel Room", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 319, "category": "Panel AC", "location": "BENNINGER BLEACHING-01 5b", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 320, "category": "Panel AC", "location": "BENNINGER BLEACHING 5b (2)", "name": "PANEL ROOM", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 321, "category": "Panel AC", "location": "BENNINGER BLEACHING 5b (2)", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 322, "category": "Panel AC", "location": "BENNINGER BLEACHING 5b (2)", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 323, "category": "Panel AC", "location": "BENNINGER BLEACHING 5b (2)", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Need Service", "remarks": ""}, {"id": 324, "category": "Panel AC", "location": "TUNG YANG # 03", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2019, "status": "Running", "remarks": ""}, {"id": 325, "category": "Panel AC", "location": "TUNG YANG # 03", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 326, "category": "Panel AC", "location": "TUNG YANG # 03", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2003, "status": "Running", "remarks": ""}, {"id": 327, "category": "Panel AC", "location": "TUNG YANG # 04", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2018, "status": "Running", "remarks": ""}, {"id": 328, "category": "Panel AC", "location": "TUNG YANG # 04", "name": "Panel Room", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 329, "category": "Panel AC", "location": "TUNG YANG # 05", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 330, "category": "Panel AC", "location": "TUNG YANG # 05", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-134 A", "installYear": 2018, "status": "Running", "remarks": ""}, {"id": 331, "category": "Panel AC", "location": "TUNG YANG # 06", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2011, "status": "Running", "remarks": ""}, {"id": 332, "category": "Panel AC", "location": "TUNG YANG # 06", "name": "Panel Room", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Need Service", "remarks": ""}, {"id": 333, "category": "Panel AC", "location": "TUNG YANG # 06", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2011, "status": "Running", "remarks": ""}, {"id": 334, "category": "Panel AC", "location": "TUNG YANG # 07", "name": "PANEL ROOM", "make": "Haier", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2014, "status": "Running", "remarks": ""}, {"id": 335, "category": "Panel AC", "location": "TUNG YANG # 07", "name": "Panel Room", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 336, "category": "Panel AC", "location": "TUNG YANG # 07", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2014, "status": "Running", "remarks": ""}, {"id": 337, "category": "Panel AC", "location": "NIPCO-L-CALENDER # 01", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-134 A", "installYear": 1992, "status": "Running", "remarks": ""}, {"id": 338, "category": "Panel AC", "location": "SANFORIZE # 01", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": 2018, "status": "Running", "remarks": ""}, {"id": 339, "category": "Panel AC", "location": "SANFORIZE # 03", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "", "installYear": 2020, "status": "Need Service", "remarks": ""}, {"id": 340, "category": "Panel AC", "location": "SANFORIZE # 02", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "", "installYear": 2018, "status": "Running", "remarks": ""}, {"id": 341, "category": "Panel AC", "location": "SANFORIZE # 04", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2014, "status": "Need Service", "remarks": ""}, {"id": 342, "category": "Panel AC", "location": "THERMOSOL (MONFORT)", "name": "PANEL ROOM", "make": "Motor Act", "type": "Roof Mounted", "tons": 1.0, "kw": 3.51, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": 1996, "status": "Need Service", "remarks": ""}, {"id": 343, "category": "Panel AC", "location": "THERMOSOL (MONFORT)", "name": "Panel Room", "make": "RETAIL", "type": "Door Mounted", "tons": 1.0, "kw": 3.51, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-134 A", "installYear": 1996, "status": "Need Service", "remarks": ""}, {"id": 344, "category": "Panel AC", "location": "THERMOSOL (MONFORT)", "name": "Panel Room", "make": "RETAIL", "type": "Door Mounted", "tons": 1.0, "kw": 3.51, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "", "installYear": 1996, "status": "Running", "remarks": ""}, {"id": 345, "category": "Panel AC", "location": "THERMOSOLE (BRUCKNER)", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2013, "status": "Running", "remarks": ""}, {"id": 346, "category": "Panel AC", "location": "THERMOSOLE (BRUCKNER)", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2013, "status": "Need Service", "remarks": ""}, {"id": 347, "category": "Panel AC", "location": "THERMOSOLE (BRUCKNER)", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2013, "status": "Running", "remarks": ""}, {"id": 348, "category": "Panel AC", "location": "THERMOSOLE (BRUCKNER)", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2022, "status": "Running", "remarks": ""}, {"id": 349, "category": "Panel AC", "location": "GOLLER PAD STEAM", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2019, "status": "Running", "remarks": ""}, {"id": 350, "category": "Panel AC", "location": "GOLLER PAD STEAM", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2019, "status": "Running", "remarks": ""}, {"id": 351, "category": "Panel AC", "location": "GOLLER PAD STEAM", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2019, "status": "Running", "remarks": ""}, {"id": 352, "category": "Panel AC", "location": "GOLLER PAD STEAM", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2010, "status": "Running", "remarks": ""}, {"id": 353, "category": "Panel AC", "location": "GOLLER WASHING", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2004, "status": "Running", "remarks": ""}, {"id": 354, "category": "Panel AC", "location": "GOLLER WASHING", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2004, "status": "Running", "remarks": ""}, {"id": 355, "category": "Panel AC", "location": "BENNINGER KUSTER PADDER 3", "name": "PANEL ROOM", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2018, "status": "Running", "remarks": ""}, {"id": 356, "category": "Panel AC", "location": "BENNINGER KUSTER PADDER 3", "name": "PANEL ROOM", "make": "RETAIL", "type": "Door Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 2010, "status": "Running", "remarks": ""}, {"id": 357, "category": "Panel AC", "location": "BENNINGER KUSTER PADDER 4", "name": "PANEL ROOM", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 358, "category": "Panel AC", "location": "GOLLER MERCERIZE", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 1997, "status": "Need Service", "remarks": ""}, {"id": 359, "category": "Panel AC", "location": "GOLLER MERCERIZE", "name": "Panel Room", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 1997, "status": "Running", "remarks": ""}, {"id": 360, "category": "Panel AC", "location": "GOLLER MERCERIZE", "name": "PANEL ROOM", "make": "RETAIL", "type": "Roof Mounted", "tons": 0.5, "kw": 1.75, "kwh": 0.4565, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": 1997, "status": "Running", "remarks": ""}, {"id": 361, "category": "Panel AC", "location": "FAISALABAD MERCERIZE", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2010, "status": "Running", "remarks": ""}, {"id": 362, "category": "Panel AC", "location": "FAISALABAD MERCERIZE", "name": "Panel Room", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2010, "status": "Running", "remarks": ""}, {"id": 363, "category": "Panel AC", "location": "BENNINGER MERCERIZE", "name": "PANEL ROOM", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2015, "status": "Running", "remarks": ""}, {"id": 364, "category": "Panel AC", "location": "BENNINGER MERCERIZE", "name": "Panel Room", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 365, "category": "Panel AC", "location": "GOLLER SINGEING", "name": "PANEL ROOM", "make": "Gree", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2019, "status": "Running", "remarks": ""}, {"id": 366, "category": "Panel AC", "location": "GOLLER SINGEING", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 367, "category": "Panel AC", "location": "SAGA SINGEING", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2015, "status": "Running", "remarks": ""}, {"id": 368, "category": "Panel AC", "location": "SAGA SINGEING", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2015, "status": "Need Service", "remarks": ""}, {"id": 369, "category": "Panel AC", "location": "GOLLER BLEACHING", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2004, "status": "Running", "remarks": ""}, {"id": 370, "category": "Panel AC", "location": "GOLLER BLEACHING", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2004, "status": "Running", "remarks": ""}, {"id": 371, "category": "Panel AC", "location": "GOLLER BLEACHING", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 372, "category": "Panel AC", "location": "GOLLER BLEACHING", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 373, "category": "Panel AC", "location": "J-BOX", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2019, "status": "Running", "remarks": ""}, {"id": 374, "category": "Panel AC", "location": "J-BOX", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2019, "status": "Running", "remarks": ""}, {"id": 375, "category": "Panel AC", "location": "UNICA REGGIANI PRINTING 01", "name": "PANEL ROOM", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2017, "status": "Running", "remarks": ""}, {"id": 376, "category": "Panel AC", "location": "UNICA REGGIANI PRINTING 01", "name": "Panel Room", "make": "Euro Air", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2017, "status": "Running", "remarks": ""}, {"id": 377, "category": "Panel AC", "location": "UNICA REGGIANI PRINTING 02", "name": "PANEL ROOM", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 378, "category": "Panel AC", "location": "UNICA REGGIANI PRINTING 02", "name": "PANEL ROOM", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 379, "category": "Panel AC", "location": "UNICA REGGIANI PRINTING 03", "name": "PANEL ROOM", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-410 A", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 380, "category": "Panel AC", "location": "UNICA REGGIANI PRINTING 03", "name": "PANEL ROOM", "make": "Gree", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2021, "status": "Running", "remarks": ""}, {"id": 381, "category": "Panel AC", "location": "FLAT BED ICHINOSE", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": 2004, "status": "Running", "remarks": ""}, {"id": 382, "category": "Panel AC", "location": "ARIOLI AGER", "name": "PANEL ROOM", "make": "Euro Air", "type": "SPLIT", "tons": 1.0, "kw": 3.51, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-22", "installYear": 2004, "status": "Running", "remarks": ""}, {"id": 383, "category": "Panel AC", "location": "NEW ARIOLI AGER", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2020, "status": "Running", "remarks": ""}, {"id": 384, "category": "Panel AC", "location": "PK Seinging", "name": "PANEL ROOM", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 385, "category": "Panel AC", "location": "HOT FLUE", "name": "PANEL ROOM", "make": "RETAIL", "type": "Roof Mounted", "tons": 1.0, "kw": 3.51, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-134 A", "installYear": 2001, "status": "Running", "remarks": ""}, {"id": 386, "category": "Panel AC", "location": "ZIMMER PRINTING", "name": "PANEL ROOM", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": 2017, "status": "Running", "remarks": ""}, {"id": 387, "category": "Panel AC", "location": "ZIMMER PRINTING", "name": "Panel Room", "make": "Kenwood", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2017, "status": "Running", "remarks": ""}, {"id": 388, "category": "Panel AC", "location": "ZIMMER PRINTING", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2017, "status": "Running", "remarks": ""}, {"id": 389, "category": "Panel AC", "location": "Benninger Pad Steam", "name": "PANEL ROOM", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2022, "status": "Need Service", "remarks": ""}, {"id": 390, "category": "Panel AC", "location": "Benninger Pad Steam", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2022, "status": "Running", "remarks": ""}, {"id": 391, "category": "Panel AC", "location": "Benninger Pad Steam", "name": "Panel Room", "make": "Kenwood", "type": "Split", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2022, "status": "Running", "remarks": ""}, {"id": 392, "category": "Panel AC", "location": "C R U", "name": "PANEL ROOM", "make": "Daikool", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "R-22", "installYear": 2002, "status": "Running", "remarks": ""}, {"id": 393, "category": "Panel AC", "location": "Pluvia washing", "name": "PANEL ROOM", "make": "Kenwoor", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "", "installYear": 2023, "status": "Running", "remarks": ""}, {"id": 394, "category": "Panel AC", "location": "Pluvia washing", "name": "Panel Room", "make": "Kenwoor", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "", "installYear": 2023, "status": "Need Service", "remarks": ""}, {"id": 395, "category": "Panel AC", "location": "Fresh Air Panel", "name": "PANEL ROOM", "make": "Kenwoor", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2022, "status": "Running", "remarks": ""}, {"id": 396, "category": "Panel AC", "location": "Fresh Air Panel", "name": "Panel Room", "make": "Daikool", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2012, "status": "Running", "remarks": ""}, {"id": 397, "category": "Panel AC", "location": "Fresh Air Panel", "name": "PANEL ROOM", "make": "Kenwoor", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2025, "status": "Running", "remarks": ""}, {"id": 398, "category": "Panel AC", "location": "LT ROOM 5B", "name": "PANEL ROOM", "make": "Kenwoor", "type": "SPLIT", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "", "installYear": 2025, "status": "Running", "remarks": ""}, {"id": 399, "category": "Panel AC", "location": "LT ROOM 5B", "name": "Panel Room", "make": "Kenwoor", "type": "SPLIT", "tons": 1.5, "kw": 5.26, "kwh": 1.6434, "amp": 9, "tag": "", "gasType": "", "installYear": 2025, "status": "Running", "remarks": ""}, {"id": 400, "category": "Water Cooler", "location": "GTM-2", "name": "ASSEMBLY AREA", "make": "N/A", "type": "Water Cooler", "tons": 2.0, "kw": 7.02, "kwh": 1.2782, "amp": 7, "tag": "", "gasType": "R134a", "installYear": 2010, "status": "Running", "remarks": ""}, {"id": 401, "category": "Water Cooler", "location": "GTM-2", "name": "GOLLER BLEACHING", "make": "N/A", "type": "Water Cooler", "tons": 2.0, "kw": 7.02, "kwh": 1.2782, "amp": 7, "tag": "", "gasType": "R134a", "installYear": 2008, "status": "Running", "remarks": ""}, {"id": 402, "category": "Water Cooler", "location": "GTM-2", "name": "ELECTRICAL DEPTT", "make": "N/A", "type": "Water Cooler", "tons": 2.0, "kw": 7.02, "kwh": 1.2782, "amp": 7, "tag": "", "gasType": "R134a", "installYear": 2008, "status": "Running", "remarks": ""}, {"id": 403, "category": "Water Cooler", "location": "GTM-2", "name": "CANTEEN", "make": "N/A", "type": "Water Cooler", "tons": 2.0, "kw": 7.02, "kwh": 1.2782, "amp": 7, "tag": "", "gasType": "R134a", "installYear": 2007, "status": "Running", "remarks": ""}, {"id": 404, "category": "Water Cooler", "location": "GTM-2", "name": "LOCAL DYEING", "make": "N/A", "type": "Water Cooler", "tons": 2.0, "kw": 7.02, "kwh": 1.2782, "amp": 7, "tag": "", "gasType": "R134a", "installYear": 2007, "status": "Running", "remarks": ""}, {"id": 405, "category": "Water Cooler", "location": "GTM-2", "name": "EXTENSION AREA 5b (1)", "make": "N/A", "type": "Water Cooler", "tons": 2.0, "kw": 7.02, "kwh": 1.2782, "amp": 7, "tag": "", "gasType": "R134a", "installYear": 2007, "status": "Running", "remarks": ""}, {"id": 406, "category": "Water Cooler", "location": "GTM-2", "name": "JOAN FABRIC DEPARTMENT", "make": "N/A", "type": "Water Cooler", "tons": 2.0, "kw": 7.02, "kwh": 1.2782, "amp": 7, "tag": "", "gasType": "R134a", "installYear": 2007, "status": "Running", "remarks": ""}, {"id": 407, "category": "Air Dryer", "location": "MAIN COMPRESSOR ROOM  REFRIGERANT AIR DRYER", "name": "AIR DRYER", "make": "mirkhpor", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 2.1826, "amp": 4, "tag": "", "gasType": "R-404a", "installYear": "", "status": "Running", "remarks": "Capacity: 22 m3/min"}, {"id": 408, "category": "Air Dryer", "location": "MAIN COMPRESSOR ROOM  REFRIGERANT AIR DRYER", "name": "AIR DRYER", "make": "Atlas Copco", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 3.2739, "amp": 6, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 24 m3/ min"}, {"id": 409, "category": "Air Dryer", "location": "MAIN COMPRESSOR ROOM  REFRIGERANT AIR DRYER", "name": "AIR DRYER", "make": "Atlas Copco", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 1.6369, "amp": 3, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 16.5 m3/ min"}, {"id": 410, "category": "Air Dryer", "location": "MAIN COMPRESSOR ROOM  REFRIGERANT AIR DRYER", "name": "AIR DRYER", "make": "SUNWIN", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 2.1826, "amp": 4, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 25Nm3/ min"}, {"id": 411, "category": "Air Dryer", "location": "MAIN COMPRESSOR ROOM  REFRIGERANT AIR DRYER", "name": "AIR DRYER", "make": "SUNWIN", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 2.1826, "amp": 4, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 25Nm3/ min"}, {"id": 412, "category": "Air Dryer", "location": "Buser Compressor Room", "name": "AIR DRYER", "make": "SUNWIN", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 2.1826, "amp": 4, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 25Nm3/ min"}, {"id": 413, "category": "Air Dryer", "location": "Buser Compressor Room", "name": "Air Dryer", "make": "Atlas Copco", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 3.2739, "amp": 6, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 24 m3/ min"}, {"id": 414, "category": "Air Dryer", "location": "IT Compressor Room", "name": "AIR DRYER", "make": "Al- Ameen", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 6.5 m3/ min"}, {"id": 415, "category": "Air Dryer", "location": "UNICA 01", "name": "Air Dryer", "make": "Elang", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-404a", "installYear": "", "status": "Running", "remarks": "Capacity: 6.5 m3/ min"}, {"id": 416, "category": "Air Dryer", "location": "DIGITAL PRINTING JAVELIN", "name": "Air Dryer", "make": "Elang", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 1.0913, "amp": 2, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 2.4 m3/ min"}, {"id": 417, "category": "Air Dryer", "location": "MS DIGITAL PRINTING", "name": "Air Dryer", "make": "Al- Ameen", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 6.5 m3/ min"}, {"id": 418, "category": "Air Dryer", "location": "Lazer Engraving", "name": "Air Dryer", "make": "Al- Ameen", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 6.5 m3/ min"}, {"id": 419, "category": "Air Dryer", "location": "UNICA REGGIANI PRINTING 2&3 at 5B", "name": "Air Dryer", "make": "Al- Ameen", "type": "AIR COOL", "tons": 0, "kw": 4.5, "kwh": 1.0956, "amp": 6, "tag": "", "gasType": "R-410", "installYear": "", "status": "Running", "remarks": "Capacity: 6.5 m3/ min"}, {"id": 420, "category": "Compressor", "location": "It roof", "name": "AIR COMPRESSOR", "make": "Worthington", "type": "Air Compressor", "tons": 0, "kw": 55.0, "kwh": 0, "amp": 85, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 421, "category": "Compressor", "location": "Compressor Room", "name": "Air Compressor", "make": "Worthington", "type": "Air Compressor", "tons": 0, "kw": 75.0, "kwh": 75.8155, "amp": 132, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 422, "category": "Compressor", "location": "Main Compressor Room", "name": "Air Compressor", "make": "Worthington (vfd)", "type": "Air Compressor", "tons": 0, "kw": 75.0, "kwh": 68.9232, "amp": 120, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 423, "category": "Compressor", "location": "Compressor Room", "name": "Air Compressor", "make": "Worthington", "type": "Air Compressor", "tons": 0, "kw": 75.0, "kwh": 0, "amp": 132, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 424, "category": "Compressor", "location": "Compressor Room", "name": "Air Compressor", "make": "Worthington", "type": "Air Compressor", "tons": 0, "kw": 90.0, "kwh": 91.8976, "amp": 160, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 425, "category": "Compressor", "location": "Compressor Room", "name": "Air Compressor", "make": "Worthington", "type": "Air Compressor", "tons": 0, "kw": 90.0, "kwh": 91.8976, "amp": 160, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 426, "category": "Compressor", "location": "Compressor Room", "name": "Air Compressor", "make": "Atlas Copco", "type": "Air Compressor", "tons": 0, "kw": 90.0, "kwh": 0, "amp": 160, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 427, "category": "Compressor", "location": "Compressor Room", "name": "Air Compressor", "make": "Atlas Copco", "type": "Air Compressor", "tons": 0, "kw": 90.0, "kwh": 0, "amp": 160, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 428, "category": "Compressor", "location": "New  Compressor Room 5/B", "name": "Air Compressor", "make": "Atlas Copco", "type": "Air Compressor", "tons": 0, "kw": 90.0, "kwh": 91.8976, "amp": 160, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 429, "category": "Compressor", "location": "Compressor Room", "name": "Air Compressor", "make": "Atlas Copco (vfd)", "type": "Air Compressor", "tons": 0, "kw": 90.0, "kwh": 90.7489, "amp": 158, "tag": "", "gasType": "", "installYear": "", "status": "Running", "remarks": ""}, {"id": 430, "category": "Chiller", "location": "Central Plant", "name": "NIPCO-L M/C #01", "make": "Patel", "type": "AIR COOL", "tons": 20.0, "kw": 70.2, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 431, "category": "Chiller", "location": "Central Plant", "name": "NIPCO-L M/C #02", "make": "Patel", "type": "AIR COOL", "tons": 20.0, "kw": 70.2, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Under Maintenance", "remarks": "under maintenance"}, {"id": 432, "category": "Chiller", "location": "Central Plant", "name": "GOLLER PAD STEAM", "make": "France", "type": "AIR COOL", "tons": 10.0, "kw": 35.1, "kwh": 7.639, "amp": 14, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 433, "category": "Chiller", "location": "Central Plant", "name": "NEW KUSTER CALENDAR", "make": "France", "type": "AIR COOL", "tons": 20.0, "kw": 70.2, "kwh": 7.639, "amp": 14, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 434, "category": "Chiller", "location": "Central Plant", "name": "LASER ENGRAVING", "make": "France", "type": "AIR COOL", "tons": 3.0, "kw": 10.53, "kwh": 1.3641, "amp": 2.5, "tag": "", "gasType": "R-134 A", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 435, "category": "Chiller", "location": "Central Plant", "name": "STRIPPING MACHINE", "make": "France", "type": "AIR COOL", "tons": 2.0, "kw": 7.02, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 436, "category": "Chiller", "location": "Central Plant", "name": "Buser Flet Belt", "make": "Local", "type": "AIR COOL", "tons": 6.0, "kw": 21.06, "kwh": 2.1912, "amp": 12, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 437, "category": "Chiller", "location": "Central Plant", "name": "Ben New Pad Steam", "make": "Motor Act", "type": "Air Cool", "tons": 20.0, "kw": 70.2, "kwh": 12.0041, "amp": 22, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 438, "category": "Chiller", "location": "Central Plant", "name": "BENNINGER KUSTER PAD BATCH-03", "make": "Tech", "type": "AIR COOL", "tons": 10.0, "kw": 35.1, "kwh": 7.639, "amp": 14, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}, {"id": 439, "category": "Chiller", "location": "Central Plant", "name": "BENNINGER KUSTER PAD BATCH-04", "make": "Tech", "type": "AIR COOL", "tons": 12.0, "kw": 42.12, "kwh": 7.639, "amp": 14, "tag": "", "gasType": "R-22", "installYear": "", "status": "Running", "remarks": "Running"}];
+let nextId = Math.max(...DB.map(u=>u.id)) + 1;
+let filtered = [...DB];
+let currentPage = 1;
+const PAGE_SIZE = 30;
+let editingId = null;
+let deletingId = null;
+let currentCat = '';
+let sortCol = 'id';
+let sortDir = 1;
+
+// ── LOCAL STORAGE ──
+const LS_KEY = 'GTM2_AC_DB';
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(DB));
+    const ind = document.getElementById('save-indicator');
+    if (ind) {
+      ind.style.display = 'inline';
+      clearTimeout(ind._t);
+      ind._t = setTimeout(() => { ind.style.display = 'none'; }, 2000);
+    }
+  } catch(e) { console.warn('Storage save failed', e); }
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        DB = parsed;
+        return true;
+      }
+    }
+  } catch(e) { console.warn('Storage load failed', e); }
+  return false;
+}
+
+// ── INIT ──
+function init() {
+  loadFromStorage();
+  nextId = Math.max(...DB.map(u=>u.id), 0) + 1;
+  populateFilters();
+  applyFilters();
+}
+
+function populateFilters() {
+  const makes = [...new Set(DB.map(u=>u.make).filter(m=>m&&m!='N/A'&&m!='Unknown'))].sort();
+  const locs  = [...new Set(DB.map(u=>u.location).filter(Boolean))].sort();
+  const ms = document.getElementById('filter-make');
+  const ls = document.getElementById('filter-loc');
+  makes.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; ms.appendChild(o); });
+  locs.forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=l; ls.appendChild(o); });
+}
+
+// ── FILTERS & SORT ──
+function setCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentPage = 1;
+  applyFilters();
+}
+
+function applyFilters() {
+  const q      = document.getElementById('search-input').value.toLowerCase().trim();
+  const status = document.getElementById('filter-status').value;
+  const make   = document.getElementById('filter-make').value;
+  const loc    = document.getElementById('filter-loc').value;
+
+  filtered = DB.filter(u => {
+    if (currentCat && u.category !== currentCat) return false;
+    if (status && u.status !== status) return false;
+    if (make && u.make !== make) return false;
+    if (loc && u.location !== loc) return false;
+    if (q) {
+      const hay = [u.location,u.name,u.make,u.type,u.tag,u.gasType,u.remarks,u.category].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  filtered.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (va===''||va===null||va===undefined) va = sortDir>0?Infinity:-Infinity;
+    if (vb===''||vb===null||vb===undefined) vb = sortDir>0?Infinity:-Infinity;
+    if (typeof va==='string') return sortDir * va.localeCompare(vb);
+    return sortDir * (va - vb);
+  });
+
+  document.getElementById('results-count').textContent = `${filtered.length} units`;
+  currentPage = 1;
+  renderTable();
+  renderKPIs();
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('.ac-table th').forEach(th => {
+    th.classList.remove('sorted-asc','sorted-desc');
+  });
+  const ths = document.querySelectorAll('.ac-table th');
+  const cols = ['id','category','location','name','make','type','tons','kwh','gasType','installYear','status'];
+  const idx = cols.indexOf(col);
+  if (idx >= 0) ths[idx].classList.add(sortDir>0?'sorted-asc':'sorted-desc');
+  applyFilters();
+}
+
+// ── KPIs ──
+function renderKPIs() {
+  const all = DB;
+  document.getElementById('kpi-total').textContent   = all.length;
+  document.getElementById('kpi-office').textContent  = all.filter(u=>u.category==='Office AC').length;
+  document.getElementById('kpi-panel').textContent   = all.filter(u=>u.category==='Panel AC').length;
+  document.getElementById('kpi-chiller').textContent = all.filter(u=>u.category==='Chiller').length;
+  document.getElementById('kpi-running').textContent = all.filter(u=>u.status==='Running').length;
+  document.getElementById('kpi-service').textContent = all.filter(u=>u.status==='Need Service').length;
+  const decomm = all.filter(u=>['Decommissioned','Sold','Shifted','Faulty'].includes(u.status)).length;
+  document.getElementById('kpi-decomm').textContent  = decomm;
+  const tons = all.filter(u=>u.status==='Running').reduce((s,u)=>s+(u.tons||0),0);
+  document.getElementById('kpi-tons').textContent    = tons.toFixed(1);
+  const kwh  = all.filter(u=>u.status==='Running').reduce((s,u)=>s+(u.kwh||0),0);
+  document.getElementById('kpi-kwh').textContent     = kwh.toFixed(1);
+}
+
+// ── TABLE ──
+function catClass(c) {
+  return {
+    'Office AC':'cat-office','Panel AC':'cat-panel','Chiller':'cat-chiller',
+    'Water Cooler':'cat-water','Air Dryer':'cat-dryer','Compressor':'cat-comp'
+  }[c]||'cat-office';
+}
+function statusClass(s) {
+  return {'Running':'s-running','Need Service':'s-service','Under Maintenance':'s-maintenance',
+          'Decommissioned':'s-decommissioned','Sold':'s-sold','Shifted':'s-decommissioned','Faulty':'s-decommissioned'}[s]||'s-running';
+}
+function dotClass(s) {
+  return {'Running':'d-green','Need Service':'d-amber','Under Maintenance':'d-red'}[s]||'d-gray';
+}
+
+function renderTable() {
+  const tbody  = document.getElementById('ac-tbody');
+  const noData = document.getElementById('no-data');
+  const total  = filtered.length;
+  const start  = (currentPage-1)*PAGE_SIZE;
+  const end    = Math.min(start+PAGE_SIZE, total);
+  const page   = filtered.slice(start, end);
+
+  if (!page.length) {
+    tbody.innerHTML = '';
+    noData.classList.remove('hidden');
+  } else {
+    noData.classList.add('hidden');
+    tbody.innerHTML = page.map(u=>`
+      <tr>
+        <td style="color:var(--muted);font-size:.72rem">#${u.id}</td>
+        <td><span class="cat-badge ${catClass(u.category)}">${u.category}</span></td>
+        <td><strong>${u.location||'—'}</strong></td>
+        <td>${u.name||'—'}</td>
+        <td>${u.make||'—'}</td>
+        <td style="color:var(--muted);font-size:.75rem">${u.type||'—'}</td>
+        <td><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white)">${u.tons||'—'}</span>${u.tons?'<span style="color:var(--muted);font-size:.7rem"> T</span>':''}</td>
+        <td style="color:var(--teal);font-size:.78rem">${u.kwh||'—'}</td>
+        <td style="font-size:.73rem;color:var(--muted)">${u.gasType||'—'}</td>
+        <td style="color:var(--muted);font-size:.73rem">${u.installYear||'—'}</td>
+        <td><span class="status-badge ${statusClass(u.status)}"><span class="dot ${dotClass(u.status)}"></span>${u.status}</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="icon-btn edit" onclick="openEditModal(${u.id})" title="Edit">✏️</button>
+            <button class="icon-btn del"  onclick="openConfirm(${u.id})"   title="Remove">🗑️</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  // Page info
+  document.getElementById('page-info').textContent = total
+    ? `Showing ${start+1}–${end} of ${total} units`
+    : 'No units found';
+
+  // Pagination buttons
+  const totalPages = Math.ceil(total/PAGE_SIZE);
+  const btns = document.getElementById('page-btns');
+  btns.innerHTML = '';
+  if (totalPages > 1) {
+    const mk = (label, pg, disabled=false) => {
+      const b = document.createElement('button');
+      b.className = 'page-btn' + (pg===currentPage?' active':'');
+      b.textContent = label; b.disabled = disabled;
+      if (!disabled) b.onclick = () => { currentPage=pg; renderTable(); };
+      btns.appendChild(b);
+    };
+    mk('«', 1, currentPage===1);
+    mk('‹', currentPage-1, currentPage===1);
+    const lo = Math.max(1,currentPage-2), hi = Math.min(totalPages,currentPage+2);
+    for (let p=lo; p<=hi; p++) mk(p,p);
+    mk('›', currentPage+1, currentPage===totalPages);
+    mk('»', totalPages, currentPage===totalPages);
+  }
+}
+
+// ── ADD / EDIT ──
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').innerHTML = '➕ Add New Unit <button class="modal-close" onclick="closeModal()">✕</button>';
+  clearForm();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function openEditModal(id) {
+  const u = DB.find(x=>x.id===id); if(!u) return;
+  editingId = id;
+  document.getElementById('modal-title').innerHTML = `✏️ Edit Unit #${id} <button class="modal-close" onclick="closeModal()">✕</button>`;
+  document.getElementById('f-category').value = u.category;
+  document.getElementById('f-status').value   = u.status;
+  document.getElementById('f-location').value = u.location||'';
+  document.getElementById('f-name').value     = u.name||'';
+  document.getElementById('f-make').value     = u.make||'';
+  document.getElementById('f-type').value     = u.type||'';
+  document.getElementById('f-tons').value     = u.tons||'';
+  document.getElementById('f-kwh').value      = u.kwh||'';
+  document.getElementById('f-gas').value      = u.gasType||'';
+  document.getElementById('f-year').value     = u.installYear||'';
+  document.getElementById('f-tag').value      = u.tag||'';
+  document.getElementById('f-amp').value      = u.amp||'';
+  document.getElementById('f-remarks').value  = u.remarks||'';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.add('hidden');
+}
+
+function clearForm() {
+  ['f-location','f-name','f-make','f-type','f-tons','f-kwh','f-year','f-tag','f-amp','f-remarks']
+    .forEach(id => document.getElementById(id).value='');
+  document.getElementById('f-category').selectedIndex=0;
+  document.getElementById('f-status').selectedIndex=0;
+  document.getElementById('f-gas').selectedIndex=0;
+}
+
+function saveUnit() {
+  const loc = document.getElementById('f-location').value.trim();
+  if (!loc) { showToast('Location is required!','error'); return; }
+  const unit = {
+    id: editingId || nextId++,
+    category:    document.getElementById('f-category').value,
+    status:      document.getElementById('f-status').value,
+    location:    loc,
+    name:        document.getElementById('f-name').value.trim(),
+    make:        document.getElementById('f-make').value.trim(),
+    type:        document.getElementById('f-type').value.trim(),
+    tons:        parseFloat(document.getElementById('f-tons').value)||0,
+    kwh:         parseFloat(document.getElementById('f-kwh').value)||0,
+    kw:          0,
+    gasType:     document.getElementById('f-gas').value,
+    installYear: parseInt(document.getElementById('f-year').value)||'',
+    tag:         document.getElementById('f-tag').value.trim(),
+    amp:         parseFloat(document.getElementById('f-amp').value)||'',
+    remarks:     document.getElementById('f-remarks').value.trim(),
+  };
+  if (editingId) {
+    const idx = DB.findIndex(x=>x.id===editingId);
+    DB[idx] = unit;
+    showToast('Unit updated ✓','success');
+  } else {
+    DB.push(unit);
+    showToast('Unit added ✓','success');
+  }
+  saveToStorage();
+  document.getElementById('modal-overlay').classList.add('hidden');
+  applyFilters();
+}
+
+// ── REMOVE ──
+function openConfirm(id) {
+  deletingId = id;
+  const u = DB.find(x=>x.id===id);
+  document.getElementById('confirm-msg').textContent = `"${u.name||u.location}" · ${u.tons}T ${u.make}`;
+  document.getElementById('confirm-overlay').classList.remove('hidden');
+}
+function closeConfirm(e) {
+  if (e && e.target !== document.getElementById('confirm-overlay')) return;
+  document.getElementById('confirm-overlay').classList.add('hidden');
+  deletingId = null;
+}
+function confirmRemove() {
+  const reason = document.getElementById('remove-reason').value;
+  if (reason==='delete') {
+    DB = DB.filter(x=>x.id!==deletingId);
+    showToast('Unit permanently deleted','error');
+  } else {
+    const u = DB.find(x=>x.id===deletingId);
+    u.status  = reason;
+    u.remarks = (u.remarks?u.remarks+' | ':'')+reason+' '+new Date().getFullYear();
+    showToast('Unit marked as '+reason,'success');
+  }
+  saveToStorage();
+  document.getElementById('confirm-overlay').classList.add('hidden');
+  deletingId = null;
+  applyFilters();
+}
+
+// ── IMPORT EXCEL ──
+function triggerImport() {
+  document.getElementById('import-file-input').value = '';
+  document.getElementById('import-file-input').click();
+}
+
+function importExcel(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      if (!rows || rows.length < 2) { showToast('No data found in file!', 'error'); return; }
+
+      const header = rows[0].map(h => String(h||'').trim());
+      const colMap = {
+        id:          header.findIndex(h => /^id$/i.test(h)),
+        category:    header.findIndex(h => /category/i.test(h)),
+        location:    header.findIndex(h => /location/i.test(h)),
+        name:        header.findIndex(h => /name/i.test(h)),
+        make:        header.findIndex(h => /make/i.test(h)),
+        type:        header.findIndex(h => /type/i.test(h)),
+        tons:        header.findIndex(h => /tons/i.test(h)),
+        kwh:         header.findIndex(h => /kw\/h|kwh/i.test(h)),
+        gasType:     header.findIndex(h => /gas/i.test(h)),
+        installYear: header.findIndex(h => /year/i.test(h)),
+        tag:         header.findIndex(h => /^tag$/i.test(h)),
+        amp:         header.findIndex(h => /^amp$/i.test(h)),
+        status:      header.findIndex(h => /status/i.test(h)),
+        remarks:     header.findIndex(h => /remarks/i.test(h)),
+      };
+
+      const dataRows = rows.slice(1).filter(r => r && r.some(c => c !== null && c !== ''));
+      let added = 0, updated = 0, skipped = 0;
+
+      dataRows.forEach(row => {
+        const get = (key, def='') => {
+          const idx = colMap[key];
+          return (idx >= 0 && row[idx] !== undefined && row[idx] !== null) ? row[idx] : def;
+        };
+
+        const loc = String(get('location','')).trim();
+        if (!loc) { skipped++; return; }
+
+        const importedId = parseInt(get('id', ''));
+        const unit = {
+          id:          isNaN(importedId) ? nextId++ : importedId,
+          category:    String(get('category','Office AC')).trim(),
+          location:    loc,
+          name:        String(get('name','')).trim(),
+          make:        String(get('make','')).trim(),
+          type:        String(get('type','')).trim(),
+          tons:        parseFloat(get('tons',0))||0,
+          kwh:         parseFloat(get('kwh',0))||0,
+          kw:          0,
+          gasType:     String(get('gasType','')).trim(),
+          installYear: parseInt(get('installYear',''))||'',
+          tag:         String(get('tag','')).trim(),
+          amp:         parseFloat(get('amp',''))||'',
+          status:      String(get('status','Running')).trim(),
+          remarks:     String(get('remarks','')).trim(),
+        };
+
+        if (!isNaN(importedId)) {
+          const existingIdx = DB.findIndex(x => x.id === importedId);
+          if (existingIdx >= 0) {
+            DB[existingIdx] = unit;
+            updated++;
+            return;
+          }
+        }
+        // new row — assign fresh id if duplicate
+        if (DB.find(x => x.id === unit.id)) unit.id = nextId++;
+        DB.push(unit);
+        added++;
+      });
+
+      nextId = Math.max(...DB.map(u=>u.id), 0) + 1;
+      saveToStorage();
+
+      // rebuild filters from scratch
+      const ms = document.getElementById('filter-make');
+      const ls = document.getElementById('filter-loc');
+      while (ms.options.length > 1) ms.remove(1);
+      while (ls.options.length > 1) ls.remove(1);
+      populateFilters();
+      applyFilters();
+
+      showToast(`Import done: ${added} added, ${updated} updated, ${skipped} skipped`, 'success');
+    } catch(err) {
+      console.error(err);
+      showToast('Import failed — check file format!', 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── EXPORT EXCEL ──
+function exportExcel() {
+  const wb = XLSX.utils.book_new();
+  // Main sheet
+  const rows = DB.map(u=>[
+    u.id,u.category,u.location,u.name,u.make,u.type,
+    u.tons,u.kwh,u.gasType,u.installYear,u.tag,u.amp,u.status,u.remarks
+  ]);
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['ID','Category','Location','Name/Area','Make','Type','Tons','kW/h','Gas Type','Install Year','Tag','AMP','Status','Remarks'],
+    ...rows
+  ]);
+  ws['!cols']=[4,14,28,22,14,16,7,8,10,12,12,6,16,30].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws, 'AC Register');
+
+  // Summary sheet
+  const cats = {};
+  DB.forEach(u=>{ cats[u.category]=(cats[u.category]||0)+1; });
+  const statuses = {};
+  DB.forEach(u=>{ statuses[u.status]=(statuses[u.status]||0)+1; });
+  const sumRows = [
+    ['GTM-2 · AC Asset Register — Summary','','',''],
+    ['Generated:',new Date().toLocaleDateString('en-PK'),'',''],
+    ['','','',''],
+    ['CATEGORY BREAKDOWN','','',''],
+    ['Category','Units','Total Tons','Running kW/h'],
+    ...Object.entries(cats).map(([c,n])=>[
+      c, n,
+      DB.filter(u=>u.category===c).reduce((s,u)=>s+(u.tons||0),0).toFixed(1),
+      DB.filter(u=>u.category===c&&u.status==='Running').reduce((s,u)=>s+(u.kwh||0),0).toFixed(2)
+    ]),
+    ['TOTAL', DB.length,
+      DB.reduce((s,u)=>s+(u.tons||0),0).toFixed(1),
+      DB.filter(u=>u.status==='Running').reduce((s,u)=>s+(u.kwh||0),0).toFixed(2)
+    ],
+    ['','','',''],
+    ['STATUS BREAKDOWN','','',''],
+    ['Status','Count','',''],
+    ...Object.entries(statuses).map(([s,n])=>[s,n,'','']),
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(sumRows);
+  ws2['!cols']=[22,10,12,14].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws2, 'Summary');
+
+  XLSX.writeFile(wb, 'GTM2_AC_Register_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  showToast('Excel exported ✓','success');
+}
+
+// ── EXPORT PDF (print) ──
+function exportPDF() {
+  const printWin = window.open('','_blank');
+  const cats={};
+  DB.forEach(u=>{cats[u.category]=(cats[u.category]||0)+1;});
+  const rows = DB.map(u=>`<tr>
+    <td>${u.id}</td><td>${u.category}</td><td>${u.location}</td><td>${u.name}</td>
+    <td>${u.make}</td><td>${u.type}</td><td>${u.tons}</td><td>${u.kwh}</td>
+    <td>${u.gasType}</td><td>${u.installYear}</td><td>${u.status}</td>
+  </tr>`).join('');
+  printWin.document.write(`<html><head><title>GTM-2 AC Register</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:9px;padding:16px;color:#111}
+    h2{font-size:14px;margin-bottom:2px}p{font-size:9px;color:#666;margin-bottom:10px}
+    .sum{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .sb{background:#f0f4f9;border-radius:4px;padding:8px 12px;min-width:100px}
+    .sv{font-size:16px;font-weight:bold;color:#0d1b2a}.sl{font-size:8px;color:#666}
+    table{width:100%;border-collapse:collapse}
+    th{background:#0d1b2a;color:white;padding:5px 7px;text-align:left;font-size:8px}
+    td{padding:4px 7px;border-bottom:1px solid #eee;font-size:8px}
+    tr:nth-child(even) td{background:#f8f9fa}
+  </style></head><body>
+  <h2>GTM-2 · AC Asset Register</h2>
+  <p>Gul Ahmed Textile Mills Ltd · Generated: ${new Date().toLocaleDateString('en-PK')} · Total: ${DB.length} units</p>
+  <div class="sum">
+    <div class="sb"><div class="sv">${DB.length}</div><div class="sl">Total Units</div></div>
+    <div class="sb"><div class="sv">${DB.filter(u=>u.status==='Running').length}</div><div class="sl">Running</div></div>
+    <div class="sb"><div class="sv">${DB.filter(u=>u.status==='Need Service').length}</div><div class="sl">Need Service</div></div>
+    <div class="sb"><div class="sv">${DB.reduce((s,u)=>s+(u.tons||0),0).toFixed(0)}</div><div class="sl">Total Tons</div></div>
+    ${Object.entries(cats).map(([c,n])=>`<div class="sb"><div class="sv">${n}</div><div class="sl">${c}</div></div>`).join('')}
+  </div>
+  <table><thead><tr><th>#</th><th>Category</th><th>Location</th><th>Name</th><th>Make</th><th>Type</th><th>Tons</th><th>kW/h</th><th>Gas</th><th>Year</th><th>Status</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  </body></html>`);
+  printWin.document.close();
+  setTimeout(()=>printWin.print(),600);
+}
+
+// ── TOAST ──
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = 'toast '+type;
+  t.innerHTML = (type==='success'?'✅':'❌')+' '+msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
